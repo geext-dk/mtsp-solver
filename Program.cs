@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ASD
+
+class MTSP
 {
-    class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-        }
+
+        // здесь будем принимать граф и решать задачу
+
     }
 }
