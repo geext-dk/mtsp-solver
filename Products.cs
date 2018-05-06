@@ -15,14 +15,13 @@ namespace mtsp
             // ДАНО:
             // Город в виде графа... (список смежности)
             Dictionary<int, List<Edge>> adjacency_list;
-            int number_of_vertices;  // Количество магазинов в городе
             int number_of_cars;      // Количество задействованных машин
             int storage;             // склад
             List<int> shops;         // Список магазинов
 
 
-            ReadData("input.txt", out adjacency_list, out number_of_vertices,
-                    out number_of_cars, out storage, out shops);
+            ReadData("input.txt", out adjacency_list, out number_of_cars,
+                     out storage, out shops);
 
             // добавим склад в массив магазинов для удобства
             shops.Add(storage);
@@ -41,8 +40,7 @@ namespace mtsp
 
         // Функция, читающие данные из переданного файла
         static bool ReadData(string input_file, out Dictionary<int, List<Edge>> adjacency_list,
-                out int number_of_vertices, out int number_of_cars,
-                out int storage, out List<int> shops)
+                out int number_of_cars, out int storage, out List<int> shops)
         {
             try
             {
@@ -56,7 +54,6 @@ namespace mtsp
                     // <кол-во пунктов = n> <кол-во машин = m> <склад>
                     string line = reader.ReadLine();
                     string[] bits = line.Split(' ');
-                    number_of_vertices = int.Parse(bits[0]);
                     number_of_cars = int.Parse(bits[1]);
                     storage = int.Parse(bits[3]);
 
@@ -70,15 +67,16 @@ namespace mtsp
 
                     // После этого идёт список дорог и их расстояния в формате:
                     // <пункт1> <пункт2> <расстояние>
-                    for (int i = 0; i < number_of_vertices; ++i)
+                    line = reader.ReadLine();
+                    while (line != null)
                     {
-                        line = reader.ReadLine();
                         bits = line.Split(' ');
                         int first = int.Parse(bits[0]);
                         int second = int.Parse(bits[1]);
                         int cost = int.Parse(bits[2]);
                         adjacency_list[first].Add(new Edge(second, cost));
                         adjacency_list[second].Add(new Edge(first, cost));
+                        line = reader.ReadLine();
                     }
                 }
                 return true;
@@ -87,7 +85,6 @@ namespace mtsp
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error during reading input file: " + input_file);
-                number_of_vertices = 0;
                 number_of_cars = 0;
                 storage = 0;
                 adjacency_list = null;
