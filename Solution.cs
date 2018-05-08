@@ -55,6 +55,11 @@ namespace mtsp
         {
             return shops;
         }
+
+        public Solution Copy()
+        {
+            return new Solution(shops, car_path_lengths);
+        }
         
 
         // поддержка foreach

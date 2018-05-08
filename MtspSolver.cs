@@ -6,8 +6,9 @@ namespace mtsp
     // Класс уже оперирует над измененным (полным) графом
     public class MtspSolver
     {
-        public static int InitialNumber = 20;
-        public static int MaximumMutationNumber = InitialNumber / 4;
+        public static int InitialNumber = 10;
+        public static int MaximumCrossoverNumber = InitialNumber;
+        public static int MaximumMutationNumber = InitialNumber;
 
         private int[,] adjacency_matrix;
         private int number_of_cars;
@@ -33,6 +34,8 @@ namespace mtsp
             // Каждое решение - это 
             // генерируем начальные решения
             GenerateInitialPopulation();
+
+            // алгоритм
             for (int i = 0; i < times; ++i)
             {
                 Crossover();
@@ -85,10 +88,11 @@ namespace mtsp
         // Изменяем каким-то образом решения из population
         private void Mutation(Solution solution, int type)
         {
+            Solution new_solution = solution.Copy();
             // Первый тип: меняем местами случайные элементы среди магазинов
             if (type % 2 == 1)
             {
-                int[] shops = solution.GetShops();
+                int[] shops = new_solution.GetShops();
                 int first = rand.Next() % number_of_shops;
                 int second;
                 do
@@ -103,8 +107,9 @@ namespace mtsp
             // Второй тип: перегенерируем количество магазинов, которые проезжает каждая машина
             else
             {
-                solution.RegenerateCarPathLengths();
+                new_solution.RegenerateCarPathLengths();
             }
+            population.Add(new_solution);
         }
 
         // Скрещивание
