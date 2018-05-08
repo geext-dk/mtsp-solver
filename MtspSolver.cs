@@ -7,24 +7,24 @@ namespace mtsp
     public class MtspSolver
     {
         public static int InitialNumber = 20;
-        public static int MaximumMutationNumber = InitialNumber / 2;
+        public static int MaximumMutationNumber = InitialNumber / 4;
 
-        private int[,] adjacency_matrix_;
-        private int number_of_cars_;
-        private int number_of_shops_;
-        private int storage_;
-        private List<Solution> population_;
-        Random rnd_;
+        private int[,] adjacency_matrix;
+        private int number_of_cars;
+        private int number_of_shops;
+        private int storage;
+        private List<Solution> population;
+        Random rand;
 
         // конструктор
         public MtspSolver(int[,] adjacency_matrix, int storage, int number_of_cars)
         {
-            adjacency_matrix_ = adjacency_matrix;
-            number_of_cars_ = number_of_cars;
-            number_of_shops_ = adjacency_matrix_.GetLength(0);
-            storage_ = storage;
-            rnd_ = new Random();
-            population_ = new List<Solution>();
+            rand = new Random();
+            this.adjacency_matrix = adjacency_matrix;
+            this.number_of_cars = number_of_cars;
+            this.number_of_shops = this.adjacency_matrix.GetLength(0);
+            this.storage = storage;
+            population = new List<Solution>();
         }
 
         // Запускаемая функция для решения задачи. Выполняется times раз
@@ -33,11 +33,15 @@ namespace mtsp
             // Каждое решение - это 
             // генерируем начальные решения
             GenerateInitialPopulation();
-
             for (int i = 0; i < times; ++i)
             {
                 Crossover();
-                Mutation();
+                int mutations = rand.Next() % MaximumMutationNumber;
+                for (int j = 0; j < mutations; j++)
+                {
+                    int chromosome = rand.Next() % population.Count;
+                    Mutation(population[chromosome], rand.Next());
+                }
                 Selection();
             }
             // как-то выводим получившееся решение
@@ -52,13 +56,13 @@ namespace mtsp
             foreach (int[] car_path in solution)
             {
                 int distance = 0;
-                int previous_shop = storage_;
+                int previous_shop = this.storage;
                 foreach (int shop in car_path)
                 {
-                    distance += adjacency_matrix_[previous_shop, shop];
+                    distance += this.adjacency_matrix[previous_shop, shop];
                     previous_shop = shop;
                 }
-                distance += adjacency_matrix_[previous_shop, storage_];
+                distance += this.adjacency_matrix[previous_shop, this.storage];
                 if (distance > max_distance)
                 {
                     max_distance = distance;
@@ -73,17 +77,34 @@ namespace mtsp
         {
             for (int i = 0; i < InitialNumber; ++i)
             {
-                int[] visited_shops = GenerateVisitedShops();
-                int[] car_path_lengths = GenerateCarPathLengths();
-                population_.Add(new Solution(visited_shops, car_path_lengths));
+                this.population.Add(new Solution(number_of_shops, number_of_cars));
             }
         }
 
         // Мутация 
         // Изменяем каким-то образом решения из population
-        private void Mutation()
+        private void Mutation(Solution solution, int type)
         {
-
+            // Первый тип: меняем местами случайные элементы среди магазинов
+            if (type % 2 == 1)
+            {
+                int[] shops = solution.GetShops();
+                int first = rand.Next() % number_of_shops;
+                int second;
+                do
+                {
+                    second = rand.Next() % number_of_shops;
+                }
+                while (first == second);
+                int x = shops[first];
+                shops[first] = shops[second];
+                shops[second] = x;
+            }
+            // Второй тип: перегенерируем количество магазинов, которые проезжает каждая машина
+            else
+            {
+                solution.RegenerateCarPathLengths();
+            }
         }
 
         // Скрещивание
@@ -98,66 +119,6 @@ namespace mtsp
         private void Selection()
         {
 
-        }
-
-
-        private int[] GenerateCarPathLengths()
-        {
-            int[] car_path_lengths = new int[number_of_cars_];
-            bool[] is_assigned = new bool[number_of_cars_];
-
-            int number_of_assigneg_shops = 0;
-            for (int j = 0; j < number_of_cars_ - 1; ++j)
-            {
-                // сначала генерируем число
-                int random_number = rnd_.Next()
-                        % (number_of_shops_ - (number_of_cars_ - j) - number_of_assigneg_shops + 1) + 1;
-                // и присваиваем случайной машине, которая еще не присваивалась
-                int random_position = GetRandomFree(is_assigned, number_of_cars_ - j);
-                car_path_lengths[random_position] = random_number;
-                is_assigned[random_position] = true;
-                number_of_assigneg_shops += random_number;
-            }
-            // последней машине просто отдаём все оставшиеся города
-            int last_car;
-            for (last_car = 0; last_car < number_of_cars_; ++last_car)
-            {
-                if (!is_assigned[last_car])
-                {
-                    break;
-                }
-            }
-            car_path_lengths[last_car] = number_of_shops_ - number_of_assigneg_shops;
-            return car_path_lengths;
-        }
-
-        private int[] GenerateVisitedShops()
-        {
-            int[] visited_shops = new int[number_of_shops_];
-            bool[] is_assigned = new bool[number_of_shops_];
-            for (int position = 0; position < number_of_shops_; ++position)
-            {
-                int random_shop = GetRandomFree(is_assigned, number_of_shops_ - position);
-                is_assigned[random_shop] = true;
-                visited_shops[position] = random_shop;
-            }
-            return visited_shops;
-        }
-
-        private int GetRandomFree(bool[] is_assigned, int number_of_free)
-        {
-            int random_position = rnd_.Next() % number_of_free;
-            int k = -1;
-            do
-            {
-                ++k;
-                if (is_assigned[k])
-                {
-                    ++random_position;
-                }
-            }
-            while (k != random_position);
-            return random_position;
         }
     }
 }

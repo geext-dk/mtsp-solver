@@ -18,33 +18,44 @@ namespace mtsp
     // А вторая машина проходит четыре магазина = 1, 6, 5 и 4
     public class Solution : IEnumerable<int[]>
     {
-        private int[] solution_;
-        private int number_of_cars_;
-
-        public Solution(int[] data, int number_of_cars)
-        {
-            solution_ = data;
-            number_of_cars_ = number_of_cars;
-        }
+        private int[] shops;
+        private int[] car_path_lengths;
+        private int number_of_cars;
+        private int number_of_shops;
 
         public Solution(int[] shops, int[] car_path_lengths)
         {
-            solution_ = new int[shops.Length + car_path_lengths.Length];
-            Array.Copy(shops, solution_, shops.Length);
-            Array.Copy(car_path_lengths, 0, solution_, shops.Length, car_path_lengths.Length);
-            number_of_cars_ = car_path_lengths.Length;
+            this.car_path_lengths = new int[car_path_lengths.Length];
+            this.shops = new int[shops.Length];
+            Array.Copy(shops, this.shops, shops.Length);
+            Array.Copy(car_path_lengths, this.car_path_lengths, car_path_lengths.Length);
+            number_of_cars = car_path_lengths.Length;
+            number_of_shops = shops.Length;
+        }
+
+        public Solution(int number_of_shops, int number_of_cars)
+        {
+            this.number_of_shops = number_of_shops;
+            this.number_of_cars = number_of_cars;
+            RegenerateCarPathLengths();
+            RegenerateVisitedShops();
         }
 
         public int GetNumberOfCars()
         {
-            return number_of_cars_;
+            return number_of_cars;
         }
         
         public int GetCarPathLength(int car_number)
         {
-            return solution_[solution_.Length - number_of_cars_ + car_number];
+            return car_path_lengths[car_number];
         }
 
+        public int[] GetShops()
+        {
+            return shops;
+        }
+        
 
         // поддержка foreach
         // При каждом возврате формирует массив магазинов, которые проходит
@@ -52,13 +63,13 @@ namespace mtsp
         public IEnumerator<int[]> GetEnumerator()
         {
             int next = 0;
-            for(int car = solution_.Length - number_of_cars_; car < solution_.Length; ++car)
+            for(int car = 0; car < car_path_lengths.Length; ++car)
             {
-                int shops_visited = solution_[car];
+                int shops_visited = car_path_lengths[car];
                 int[] ret = new int[shops_visited];
                 for (int j = 0; j < shops_visited; ++j)
                 {
-                    ret[j] = solution_[next + j];
+                    ret[j] = shops[next + j];
                 }
                 next += shops_visited;
 
@@ -69,6 +80,65 @@ namespace mtsp
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public void RegenerateCarPathLengths()
+        {
+            Random rand = new Random();
+            car_path_lengths = new int[number_of_cars];
+            bool[] is_assigned = new bool[number_of_cars];
+
+            int number_of_assigneg_shops = 0;
+            for (int j = 0; j < number_of_cars - 1; ++j)
+            {
+                // сначала генерируем число
+                int random_number = rand.Next()
+                        % (number_of_shops - (number_of_cars - j) - number_of_assigneg_shops + 1) + 1;
+                // и присваиваем случайной машине, которая еще не присваивалась
+                int random_position = GetRandomFree(is_assigned, number_of_cars - j);
+                car_path_lengths[random_position] = random_number;
+                is_assigned[random_position] = true;
+                number_of_assigneg_shops += random_number;
+            }
+            // последней машине просто отдаём все оставшиеся города
+            int last_car;
+            for (last_car = 0; last_car < number_of_cars; ++last_car)
+            {
+                if (!is_assigned[last_car])
+                {
+                    break;
+                }
+            }
+            car_path_lengths[last_car] = number_of_shops - number_of_assigneg_shops;
+        }
+
+        public void RegenerateVisitedShops()
+        {
+            shops = new int[number_of_shops];
+            bool[] is_assigned = new bool[number_of_shops];
+            for (int position = 0; position < number_of_shops; ++position)
+            {
+                int random_shop = GetRandomFree(is_assigned, number_of_shops - position);
+                is_assigned[random_shop] = true;
+                shops[position] = random_shop;
+            }
+        }
+
+        private int GetRandomFree(bool[] is_assigned, int number_of_free)
+        {
+            Random rand = new Random();
+            int random_position = rand.Next() % number_of_free;
+            int k = -1;
+            do
+            {
+                ++k;
+                if (is_assigned[k])
+                {
+                    ++random_position;
+                }
+            }
+            while (k != random_position);
+            return random_position;
         }
     }
 }
