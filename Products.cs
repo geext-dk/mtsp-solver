@@ -5,7 +5,7 @@ using Medallion.Collections;
 
 namespace mtsp
 {
-    class Products
+    public class Products
     {
         //
         // Запуск
@@ -38,30 +38,41 @@ namespace mtsp
         }
 
 
-        // Функция, читающие данные из переданного файла
-        static bool ReadData(string input_file, out Dictionary<int, List<Edge>> adjacency_list,
+        // Функция, читающая данные из переданного файла
+        public static bool ReadData(string input_file,
+                out Dictionary<int, List<Edge>> adjacency_list,
                 out int number_of_cars, out int storage, out List<int> shops)
         {
             try
             {
+                if (!File.Exists(input_file))
+                {
+                    Console.WriteLine("1");
+                    throw new FileNotFoundException(input_file);
+                }
                 adjacency_list = new Dictionary<int, List<Edge>>();
                 shops = new List<int>();
 
                 // Читаем входные данные
-                using (TextReader reader = File.OpenText(input_file))
+                
+                using (StreamReader reader = new StreamReader(input_file))
                 {
                     // Первая строка во входном файле:
                     // <кол-во пунктов = n> <кол-во машин = m> <склад>
                     string line = reader.ReadLine();
                     string[] bits = line.Split(' ');
                     number_of_cars = int.Parse(bits[1]);
-                    storage = int.Parse(bits[3]);
+                    storage = int.Parse(bits[2]);
 
                     // На следующей строке расположен список магазинов
                     line = reader.ReadLine();
                     bits = line.Split(' ');
                     foreach (string shop in bits)
                     {
+                        if (shop.Length == 0)
+                        {
+                            continue;
+                        }
                         shops.Add(int.Parse(shop));
                     }
 
@@ -74,8 +85,24 @@ namespace mtsp
                         int first = int.Parse(bits[0]);
                         int second = int.Parse(bits[1]);
                         int cost = int.Parse(bits[2]);
-                        adjacency_list[first].Add(new Edge(second, cost));
-                        adjacency_list[second].Add(new Edge(first, cost));
+                        Edge edge_first_second = new Edge(second, cost);
+                        Edge edge_second_first = new Edge(first, cost);
+                        if (adjacency_list.ContainsKey(first))
+                        {
+                            adjacency_list[first].Add(new Edge(second, cost));
+                        }
+                        else
+                        {
+                            adjacency_list.Add(first, new List<Edge>() {edge_first_second});
+                        }
+
+                        if (adjacency_list.ContainsKey(second))
+                        {
+                            adjacency_list[second].Add(edge_second_first);
+                        }
+                        else {
+                            adjacency_list.Add(second, new List<Edge>() {edge_second_first});
+                        }
                         line = reader.ReadLine();
                     }
                 }
@@ -83,6 +110,7 @@ namespace mtsp
             }
             catch (Exception e)
             {
+                
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error during reading input file: " + input_file);
                 number_of_cars = 0;
@@ -96,7 +124,7 @@ namespace mtsp
 
         // Функция, переводящая наш граф в полный, содержащий только магазины и склад
         // Предполагает, что каждая вершина смежна с какой-то другой! (то есть граф связный)
-        static void ConvertToCompleteGraph(Dictionary<int, List<Edge>> adjacency_list,
+        public static void ConvertToCompleteGraph(Dictionary<int, List<Edge>> adjacency_list,
                 List<int> shops, out int[,] adjacency_matrix)
         {
             adjacency_matrix = new int[shops.Count, shops.Count];
