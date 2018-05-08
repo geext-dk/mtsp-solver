@@ -19,9 +19,11 @@ namespace mtsp
             int storage;             // склад
             List<int> shops;         // Список магазинов
 
-
-            ReadData("input.txt", out adjacency_list, out number_of_cars,
-                     out storage, out shops);
+            if (!ReadData("input.txt", out adjacency_list, out number_of_cars,
+                     out storage, out shops))
+            {
+                return;
+            }
 
             // добавим склад в массив магазинов для удобства
             shops.Add(storage);
