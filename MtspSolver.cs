@@ -73,19 +73,12 @@ namespace mtsp
                 }
 
                 // Селекция
-                Solution best_solution = Selection();
+                Solution best_solution;
+                int function_result;
+                Selection(out best_solution, out function_result);
 
                 // Выводим
-                foreach (int shop in best_solution.GetShops())
-                {
-                    Console.Write(global_shops[shop]+ " ");
-                }
-                Console.Write("| ");
-                foreach(int car in best_solution.GetCarPathLengths())
-                {
-                    Console.Write(car + " ");
-                }
-                Console.WriteLine();
+                Console.WriteLine(function_result + ": " + best_solution.GetString(global_shops));
             }
         }
 
@@ -101,7 +94,7 @@ namespace mtsp
                 int previous_shop = car_path[0];
                 for (int i = 1; i < car_path.Length; ++i)
                 {
-                    distance += this.adjacency_matrix[previous_shop, car_path[i]];
+                    distance += adjacency_matrix[previous_shop, car_path[i]];
                     previous_shop = car_path[i];
                 }
                 distance += storage_distance[previous_shop];
@@ -127,8 +120,6 @@ namespace mtsp
         // Скрещиваем какие-то решения из population
         private Solution Crossover(Solution first, Solution second)
         {
-            Console.WriteLine("first: " + first.GetString(global_shops));
-            Console.WriteLine("second: " + second.GetString(global_shops));
             int[] first_shops = first.GetShops();
             int[] second_shops = second.GetShops();
 
@@ -163,11 +154,10 @@ namespace mtsp
                         child_shops[i] = second_shop;
                         is_assigned[i] = true;
                         is_shop_assigned[second_shop] = true;
+                        break;
                     }
-
                 }
             }
-            Console.WriteLine("child: " + child.GetString(global_shops));
             return child;
         }
 
@@ -202,7 +192,7 @@ namespace mtsp
 
         // Селекция
         // Отбираем каким-то образом решения
-        private Solution Selection()
+        private void Selection(out Solution best_solution, out int best_function_result)
         {
             List<Solution>[] groups = new List<Solution>[InitialNumber];
             bool[] is_assigned = new bool[population.Count];
@@ -246,7 +236,8 @@ namespace mtsp
                     index = i;
                 }
             }
-            return population[index].Copy();
+            best_solution = population[index].Copy();
+            best_function_result = function_results[index];
         }
     }
 }

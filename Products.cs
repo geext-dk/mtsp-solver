@@ -33,7 +33,7 @@ namespace mtsp
             MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, storage_distance, number_of_cars);
 
             // решаем
-            solver.Solve(10);
+            solver.Solve(1000);
         }
 
 

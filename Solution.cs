@@ -41,16 +41,6 @@ namespace mtsp
             RegenerateVisitedShops();
         }
 
-        public int GetNumberOfCars()
-        {
-            return number_of_cars;
-        }
-        
-        public int[] GetCarPathLengths()
-        {
-            return car_path_lengths;
-        }
-
         public int[] GetShops()
         {
             return shops;
@@ -126,6 +116,21 @@ namespace mtsp
                 is_assigned[random_shop] = true;
                 shops[position] = random_shop;
             }
+        }
+
+        public override string ToString()
+        {
+            string str = "";
+            foreach(int shop in shops)
+            {
+                str += shop + " ";
+            }
+            str += "| ";
+            foreach(int car_path in car_path_lengths)
+            {
+                str += car_path + " ";
+            }
+            return str;
         }
 
         public string GetString(List<int> global_shops)
