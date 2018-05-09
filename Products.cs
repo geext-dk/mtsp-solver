@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Medallion.Collections;
+using Priority_Queue;
 
 namespace mtsp
 {
@@ -25,15 +25,12 @@ namespace mtsp
                 return;
             }
 
-            // добавим склад в массив магазинов для удобства
-            shops.Add(storage);
-
             // Переводим в полный граф
             int[,] adjacency_matrix;
-            ConvertToCompleteGraph(adjacency_list, shops, out adjacency_matrix);
+            ConvertToCompleteGraph(adjacency_list, shops, storage, out adjacency_matrix);
 
             // инициализируем решатель
-            MtspSolver solver = new MtspSolver(adjacency_matrix, storage, number_of_cars);
+            MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, number_of_cars);
 
             // решаем
             solver.Solve(1000);
@@ -49,7 +46,6 @@ namespace mtsp
             {
                 if (!File.Exists(input_file))
                 {
-                    Console.WriteLine("1");
                     throw new FileNotFoundException(input_file);
                 }
                 adjacency_list = new Dictionary<int, List<Edge>>();
@@ -125,25 +121,29 @@ namespace mtsp
 
 
         // Функция, переводящая наш граф в полный, содержащий только магазины и склад
-        // Предполагает, что каждая вершина смежна с какой-то другой! (то есть граф связный)
+        // Предполагает, что каждая вершина смежна с какой-то другой!
         public static void ConvertToCompleteGraph(Dictionary<int, List<Edge>> adjacency_list,
-                List<int> shops, out int[,] adjacency_matrix)
+                List<int> shops, int storage, out int[,] adjacency_matrix)
         {
-            adjacency_matrix = new int[shops.Count, shops.Count];
+            int[] shops_with_storage = new int[shops.Count + 1];
+            shops.CopyTo(shops_with_storage);
+            shops_with_storage[shops.Count] = storage;
+            adjacency_matrix = new int[shops_with_storage.Length, shops_with_storage.Length];
 
-            foreach (int shop in shops)
+            for(int shop = 0; shop < shops_with_storage.Length; ++shop)
             {
                 // реализация алгоритма Дейкстры
                 int[] distance = new int[adjacency_list.Keys.Count];
                 int[] previous = new int[adjacency_list.Keys.Count];
-                PriorityQueue<int> priority_queue = new PriorityQueue<int>();
+                SimplePriorityQueue<int> priority_queue = new SimplePriorityQueue<int>();
                 foreach (int vertex in adjacency_list.Keys)
                 {
-                    priority_queue.Enqueue(vertex);
-                    distance[vertex] = -1;
                     previous[vertex] = -1;
+                    distance[vertex] = int.MaxValue;
+                    priority_queue.Enqueue(vertex, int.MaxValue);
                 }
-                distance[shop] = 0;
+                priority_queue.UpdatePriority(shops_with_storage[shop], 0);
+                distance[shops_with_storage[shop]] = 0;
 
                 while (priority_queue.Count != 0)
                 {
@@ -154,6 +154,7 @@ namespace mtsp
                         if (alt < distance[v.destination] || distance[v.destination] == -1)
                         {
                             distance[v.destination] = alt;
+                            priority_queue.UpdatePriority(v.destination, alt);
                             previous[v.destination] = u;
                         }
                     }
@@ -162,10 +163,10 @@ namespace mtsp
 
                 // тут мы теперь имеем расстояние от магазина shop до всех остальных магазинов.
                 // пихаем информацию в матрицу смежности
-                foreach (int connected_shop in shops)
+                for (int connected_shop = 0; connected_shop < shops_with_storage.Length; ++connected_shop)
                 {
-                    adjacency_matrix[shop, connected_shop] = distance[connected_shop];
-                    adjacency_matrix[connected_shop, shop] = distance[connected_shop];
+                    adjacency_matrix[shop, connected_shop] = distance[shops_with_storage[connected_shop]];
+                    adjacency_matrix[connected_shop, shop] = distance[shops_with_storage[connected_shop]];
                 }
             }
         }

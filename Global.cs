@@ -7,7 +7,7 @@ namespace mtsp
         public static int GetRandomFree(bool[] is_assigned, int number_of_free)
         {
             Random rand = new Random();
-            int random_position = rand.Next() % number_of_free;
+            int random_position = rand.Next(0, number_of_free - 1);
             int k = -1;
             do
             {

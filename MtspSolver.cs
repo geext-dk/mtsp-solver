@@ -12,22 +12,33 @@ namespace mtsp
         // следовательно для получения изначально числа, нужно оставить 2/3 особей
         public static int SelectionGroupSize = 3;
 
-        private int[,] adjacency_matrix;
-        private int number_of_cars;
-        private int number_of_shops;
-        private int storage;
+
+        private readonly int[,] adjacency_matrix;
+        private readonly int number_of_cars;
+        private readonly int number_of_shops;
+        private readonly int storage;
         private List<Solution> population;
+        private readonly List<int> global_shops;
         Random rand;
 
         // конструктор
-        public MtspSolver(int[,] adjacency_matrix, int storage, int number_of_cars)
+        // Мы преобразовываем глобальное решение в локальное (т. е. индексы из изначально графа
+        // преобразуются в индексы в полного графа
+        public MtspSolver(int[,] adjacency_matrix, List<int> global_shops, int storage, int number_of_cars)
         {
             rand = new Random();
-            this.adjacency_matrix = adjacency_matrix;
-            this.number_of_cars = number_of_cars;
-            this.number_of_shops = this.adjacency_matrix.GetLength(0);
-            this.storage = storage;
             population = new List<Solution>();
+
+            this.adjacency_matrix = adjacency_matrix;
+            this.global_shops = global_shops;
+            this.number_of_cars = number_of_cars;
+            this.storage = storage;
+            number_of_shops = this.adjacency_matrix.GetLength(0) - 1;
+
+            if (number_of_shops <= 2)
+            {
+                SelectionGroupSize = 2;
+            }
         }
 
         // Запускаемая функция для решения задачи. Выполняется times раз
@@ -36,18 +47,18 @@ namespace mtsp
             // Каждое решение - это 
             // генерируем начальные решения
             GenerateInitialPopulation();
-
             // алгоритм
             for (int i = 0; i < times; ++i)
             {
                 // Скрещивание
+                if (number_of_shops > 2)
                 for (int j = 0; j < CrossoverNumber; ++j)
                 {
-                    int first_chromosome = rand.Next() % population.Count;
+                    int first_chromosome = rand.Next(0, population.Count - 1);
                     int second_chromosome;
                     do
                     {
-                        second_chromosome = rand.Next() % population.Count;
+                        second_chromosome = rand.Next(0, population.Count - 1);
                     } while (first_chromosome == second_chromosome);
                     Solution child = Crossover(population[first_chromosome], population[second_chromosome]);
                     population.Add(child);
@@ -56,7 +67,7 @@ namespace mtsp
                 // Мутация
                 for (int j = 0; j < MutationNumber; ++j)
                 {
-                    int chromosome = rand.Next() % population.Count;
+                    int chromosome = rand.Next(0, population.Count - 1);
                     population.Add(Mutation(population[chromosome], rand.Next()));
                 }
 
@@ -65,7 +76,7 @@ namespace mtsp
                 // Выводим
                 foreach (int shop in best_solution.GetShops())
                 {
-                    Console.Write(shop + " ");
+                    Console.Write(global_shops[shop]+ " ");
                 }
                 Console.Write("| ");
                 foreach(int car in best_solution.GetCarPathLengths())
@@ -152,8 +163,9 @@ namespace mtsp
             bool[] new_first_is_shop_assigned = new bool[number_of_shops];
 
             // Рандомно получаем последовательность из первого родителя и переносим ребёнку
-            int length = rand.Next() % (number_of_shops - 2) + 2;
-            int start_with = rand.Next() % (number_of_shops - length);
+           
+            int length = rand.Next(1, number_of_shops-2);
+            int start_with = rand.Next(1, number_of_shops - length - 1);
             for (int i = start_with; i < length + start_with; ++i)
             {
                 new_first_is_assigned[i] = true;
@@ -191,7 +203,11 @@ namespace mtsp
             for (int i = 0; i < population.Count; ++i)
             {
                 int position = Global.GetRandomFree(is_assigned, population.Count - i);
-                groups[i / 3].Add(population[position]);
+                if (i % SelectionGroupSize == 0)
+                {
+                    groups[i / SelectionGroupSize] = new List<Solution>();
+                }
+                groups[i / SelectionGroupSize].Add(population[position]);
             }
 
             List<Solution> new_population = new List<Solution>();
