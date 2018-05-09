@@ -6,9 +6,9 @@ namespace mtsp
     // Класс уже оперирует над измененным (полным) графом
     public class MtspSolver
     {
-        public static int InitialNumber = 10;
-        public static int MaximumCrossoverNumber = InitialNumber;
-        public static int MaximumMutationNumber = InitialNumber;
+        public static int InitialNumber = 8;
+        public static int CrossoverNumber = InitialNumber;
+        public static int MutationNumber = InitialNumber;
 
         private int[,] adjacency_matrix;
         private int number_of_cars;
@@ -38,13 +38,27 @@ namespace mtsp
             // алгоритм
             for (int i = 0; i < times; ++i)
             {
-                Crossover();
-                int mutations = rand.Next() % MaximumMutationNumber;
-                for (int j = 0; j < mutations; j++)
+                // Скрещивание
+                for (int j = 0; j < CrossoverNumber; ++j)
+                {
+                    int first_chromosome = rand.Next() % population.Count;
+                    int second_chromosome;
+                    do
+                    {
+                        second_chromosome = rand.Next() % population.Count;
+                    } while (first_chromosome == second_chromosome);
+                    Solution child = Crossover(population[first_chromosome], population[second_chromosome]);
+                    population.Add(child);
+                }
+
+                // Мутация
+                for (int j = 0; j < MutationNumber; ++j)
                 {
                     int chromosome = rand.Next() % population.Count;
-                    Mutation(population[chromosome], rand.Next());
+                    population.Add(Mutation(population[chromosome], rand.Next()));
                 }
+
+                // Селекция
                 Selection();
             }
             // как-то выводим получившееся решение
@@ -86,7 +100,7 @@ namespace mtsp
 
         // Мутация 
         // Изменяем каким-то образом решения из population
-        private void Mutation(Solution solution, int type)
+        private Solution Mutation(Solution solution, int type)
         {
             Solution new_solution = solution.Copy();
             // Первый тип: меняем местами случайные элементы среди магазинов
@@ -109,14 +123,51 @@ namespace mtsp
             {
                 new_solution.RegenerateCarPathLengths();
             }
-            population.Add(new_solution);
+            return new_solution;
         }
 
         // Скрещивание
         // Скрещиваем какие-то решения из population
-        private void Crossover()
+        private Solution Crossover(Solution first, Solution second)
         {
+            int[] first_shops = first.GetShops();
+            int[] second_shops = second.GetShops();
 
+
+            Solution new_first = first.Copy();
+            int[] new_first_shops = first.GetShops();
+            bool[] new_first_is_assigned = new bool[number_of_shops];
+            bool[] new_first_is_shop_assigned = new bool[number_of_shops];
+
+            // Рандомно получаем последовательность из первого родителя и переносим ребёнку
+            int length = rand.Next() % (number_of_shops - 2) + 2;
+            int start_with = rand.Next() % (number_of_shops - length);
+            for (int i = start_with; i < length + start_with; ++i)
+            {
+                new_first_is_assigned[i] = true;
+                new_first_is_shop_assigned[first_shops[i]] = true;
+            }
+            // Оставшиеся магазины переносим в ребёнка из второго родителя
+            for (int i = 0; i < number_of_shops; ++i)
+            {
+                // находим первую необработанную ячейку
+                if (new_first_is_assigned[i])
+                {
+                    continue;
+                }
+                // и присваиваем первый не присвоенный магазин
+                for (int j = 0; j < number_of_shops; ++j)
+                {
+                    if (!new_first_is_shop_assigned[j])
+                    {
+                        new_first_shops[i] = j;
+                        new_first_is_assigned[i] = true;
+                        new_first_is_shop_assigned[j] = true;
+                    }
+
+                }
+            }
+            return new_first;
         }
 
         // Селекция
