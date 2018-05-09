@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Priority_Queue;
 
 namespace mtsp
 {
@@ -27,13 +26,14 @@ namespace mtsp
 
             // Переводим в полный граф
             int[,] adjacency_matrix;
-            ConvertToCompleteGraph(adjacency_list, shops, storage, out adjacency_matrix);
+            int[] storage_distance;
+            ConvertToCompleteGraph(adjacency_list, shops, storage, out adjacency_matrix, out storage_distance);
 
             // инициализируем решатель
-            MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, number_of_cars);
+            MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, storage_distance, number_of_cars);
 
             // решаем
-            solver.Solve(1000);
+            solver.Solve(10);
         }
 
 
@@ -108,7 +108,8 @@ namespace mtsp
             }
             catch (Exception e)
             {
-                
+
+                Console.WriteLine(e.StackTrace);
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error during reading input file: " + input_file);
                 number_of_cars = 0;
@@ -123,51 +124,34 @@ namespace mtsp
         // Функция, переводящая наш граф в полный, содержащий только магазины и склад
         // Предполагает, что каждая вершина смежна с какой-то другой!
         public static void ConvertToCompleteGraph(Dictionary<int, List<Edge>> adjacency_list,
-                List<int> shops, int storage, out int[,] adjacency_matrix)
+                List<int> shops, int storage, out int[,] adjacency_matrix, out int[] storage_distance)
         {
-            int[] shops_with_storage = new int[shops.Count + 1];
-            shops.CopyTo(shops_with_storage);
-            shops_with_storage[shops.Count] = storage;
-            adjacency_matrix = new int[shops_with_storage.Length, shops_with_storage.Length];
+            adjacency_matrix = new int[shops.Count, shops.Count];
 
-            for(int shop = 0; shop < shops_with_storage.Length; ++shop)
+            for(int shop = 0; shop < shops.Count; ++shop)
             {
-                // реализация алгоритма Дейкстры
-                int[] distance = new int[adjacency_list.Keys.Count];
-                int[] previous = new int[adjacency_list.Keys.Count];
-                SimplePriorityQueue<int> priority_queue = new SimplePriorityQueue<int>();
-                foreach (int vertex in adjacency_list.Keys)
-                {
-                    previous[vertex] = -1;
-                    distance[vertex] = int.MaxValue;
-                    priority_queue.Enqueue(vertex, int.MaxValue);
-                }
-                priority_queue.UpdatePriority(shops_with_storage[shop], 0);
-                distance[shops_with_storage[shop]] = 0;
-
-                while (priority_queue.Count != 0)
-                {
-                    int u = priority_queue.Dequeue();
-                    foreach (Edge v in adjacency_list[u])
-                    {
-                        int alt = distance[u] + v.weight;
-                        if (alt < distance[v.destination] || distance[v.destination] == -1)
-                        {
-                            distance[v.destination] = alt;
-                            priority_queue.UpdatePriority(v.destination, alt);
-                            previous[v.destination] = u;
-                        }
-                    }
-                }
-                // конец работы алгоритма Дейкстры
+                int[] shop_distance;
+                int[] shop_previous;
+                Global.Dijkstra(adjacency_list, shops[shop], out shop_distance, out shop_previous);
 
                 // тут мы теперь имеем расстояние от магазина shop до всех остальных магазинов.
                 // пихаем информацию в матрицу смежности
-                for (int connected_shop = 0; connected_shop < shops_with_storage.Length; ++connected_shop)
+                for (int connected_shop = 0; connected_shop < shops.Count; ++connected_shop)
                 {
-                    adjacency_matrix[shop, connected_shop] = distance[shops_with_storage[connected_shop]];
-                    adjacency_matrix[connected_shop, shop] = distance[shops_with_storage[connected_shop]];
+                    adjacency_matrix[shop, connected_shop] = shop_distance[shops[connected_shop]];
+                    adjacency_matrix[connected_shop, shop] = shop_distance[shops[connected_shop]];
                 }
+                adjacency_matrix[shop, shop] = int.MaxValue;
+            }
+
+            // заполним отдельно массив расстояний от склада до остальных вершин
+            storage_distance = new int[shops.Count];
+            int[] distance;
+            int[] previous;
+            Global.Dijkstra(adjacency_list, storage, out distance, out previous);
+            for (int shop = 0; shop < shops.Count; ++shop)
+            {
+                storage_distance[shop] = distance[shops[shop]];
             }
         }
     }

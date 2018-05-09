@@ -16,15 +16,16 @@ namespace mtsp
         private readonly int[,] adjacency_matrix;
         private readonly int number_of_cars;
         private readonly int number_of_shops;
-        private readonly int storage;
         private List<Solution> population;
         private readonly List<int> global_shops;
-        Random rand;
+        private readonly int[] storage_distance;
+        private readonly Random rand;
 
         // конструктор
         // Мы преобразовываем глобальное решение в локальное (т. е. индексы из изначально графа
         // преобразуются в индексы в полного графа
-        public MtspSolver(int[,] adjacency_matrix, List<int> global_shops, int storage, int number_of_cars)
+        public MtspSolver(int[,] adjacency_matrix, List<int> global_shops, int storage,
+                int[] storage_distance, int number_of_cars)
         {
             rand = new Random();
             population = new List<Solution>();
@@ -32,8 +33,8 @@ namespace mtsp
             this.adjacency_matrix = adjacency_matrix;
             this.global_shops = global_shops;
             this.number_of_cars = number_of_cars;
-            this.storage = storage;
-            number_of_shops = this.adjacency_matrix.GetLength(0) - 1;
+            this.storage_distance = storage_distance;
+            number_of_shops = adjacency_matrix.GetLength(0);
 
             if (number_of_shops <= 2)
             {
@@ -54,11 +55,11 @@ namespace mtsp
                 if (number_of_shops > 2)
                 for (int j = 0; j < CrossoverNumber; ++j)
                 {
-                    int first_chromosome = rand.Next(0, population.Count - 1);
+                    int first_chromosome = rand.Next(0, population.Count);
                     int second_chromosome;
                     do
                     {
-                        second_chromosome = rand.Next(0, population.Count - 1);
+                        second_chromosome = rand.Next(0, population.Count);
                     } while (first_chromosome == second_chromosome);
                     Solution child = Crossover(population[first_chromosome], population[second_chromosome]);
                     population.Add(child);
@@ -67,12 +68,13 @@ namespace mtsp
                 // Мутация
                 for (int j = 0; j < MutationNumber; ++j)
                 {
-                    int chromosome = rand.Next(0, population.Count - 1);
+                    int chromosome = rand.Next(0, population.Count);
                     population.Add(Mutation(population[chromosome], rand.Next()));
                 }
 
                 // Селекция
                 Solution best_solution = Selection();
+
                 // Выводим
                 foreach (int shop in best_solution.GetShops())
                 {
@@ -95,14 +97,14 @@ namespace mtsp
             int max_distance = 0;
             foreach (int[] car_path in solution)
             {
-                int distance = 0;
-                int previous_shop = this.storage;
-                foreach (int shop in car_path)
+                int distance = storage_distance[car_path[0]];
+                int previous_shop = car_path[0];
+                for (int i = 1; i < car_path.Length; ++i)
                 {
-                    distance += this.adjacency_matrix[previous_shop, shop];
-                    previous_shop = shop;
+                    distance += this.adjacency_matrix[previous_shop, car_path[i]];
+                    previous_shop = car_path[i];
                 }
-                distance += this.adjacency_matrix[previous_shop, this.storage];
+                distance += storage_distance[previous_shop];
                 if (distance > max_distance)
                 {
                     max_distance = distance;
@@ -121,6 +123,54 @@ namespace mtsp
             }
         }
 
+        // Скрещивание
+        // Скрещиваем какие-то решения из population
+        private Solution Crossover(Solution first, Solution second)
+        {
+            Console.WriteLine("first: " + first.GetString(global_shops));
+            Console.WriteLine("second: " + second.GetString(global_shops));
+            int[] first_shops = first.GetShops();
+            int[] second_shops = second.GetShops();
+
+
+            Solution child = first.Copy();
+            int[] child_shops = child.GetShops();
+            bool[] is_assigned = new bool[number_of_shops];
+            bool[] is_shop_assigned = new bool[number_of_shops];
+
+            // Рандомно получаем последовательность из первого родителя и переносим ребёнку
+            int length = rand.Next(1, number_of_shops - 1);
+            int start_with = rand.Next(1, number_of_shops - length);
+            for (int i = start_with; i < length + start_with; ++i)
+            {
+                is_assigned[i] = true;
+                is_shop_assigned[child_shops[i]] = true;
+            }
+
+            // Оставшиеся магазины переносим в ребёнка из второго родителя
+            for (int i = 0; i < number_of_shops; ++i)
+            {
+                // находим первую необработанную ячейку
+                if (is_assigned[i])
+                {
+                    continue;
+                }
+                // и присваиваем первый не присвоенный магазин
+                foreach (int second_shop in second_shops)
+                {
+                    if (!is_shop_assigned[second_shop])
+                    {
+                        child_shops[i] = second_shop;
+                        is_assigned[i] = true;
+                        is_shop_assigned[second_shop] = true;
+                    }
+
+                }
+            }
+            Console.WriteLine("child: " + child.GetString(global_shops));
+            return child;
+        }
+
         // Мутация 
         // Изменяем каким-то образом решения из population
         private Solution Mutation(Solution solution, int type)
@@ -130,11 +180,11 @@ namespace mtsp
             if (type % 2 == 1)
             {
                 int[] shops = new_solution.GetShops();
-                int first = rand.Next() % number_of_shops;
+                int first = rand.Next(0, number_of_shops);
                 int second;
                 do
                 {
-                    second = rand.Next() % number_of_shops;
+                    second = rand.Next(0, number_of_shops);
                 }
                 while (first == second);
                 int x = shops[first];
@@ -149,50 +199,6 @@ namespace mtsp
             return new_solution;
         }
 
-        // Скрещивание
-        // Скрещиваем какие-то решения из population
-        private Solution Crossover(Solution first, Solution second)
-        {
-            int[] first_shops = first.GetShops();
-            int[] second_shops = second.GetShops();
-
-
-            Solution new_first = first.Copy();
-            int[] new_first_shops = first.GetShops();
-            bool[] new_first_is_assigned = new bool[number_of_shops];
-            bool[] new_first_is_shop_assigned = new bool[number_of_shops];
-
-            // Рандомно получаем последовательность из первого родителя и переносим ребёнку
-           
-            int length = rand.Next(1, number_of_shops-2);
-            int start_with = rand.Next(1, number_of_shops - length - 1);
-            for (int i = start_with; i < length + start_with; ++i)
-            {
-                new_first_is_assigned[i] = true;
-                new_first_is_shop_assigned[first_shops[i]] = true;
-            }
-            // Оставшиеся магазины переносим в ребёнка из второго родителя
-            for (int i = 0; i < number_of_shops; ++i)
-            {
-                // находим первую необработанную ячейку
-                if (new_first_is_assigned[i])
-                {
-                    continue;
-                }
-                // и присваиваем первый не присвоенный магазин
-                for (int j = 0; j < number_of_shops; ++j)
-                {
-                    if (!new_first_is_shop_assigned[j])
-                    {
-                        new_first_shops[i] = j;
-                        new_first_is_assigned[i] = true;
-                        new_first_is_shop_assigned[j] = true;
-                    }
-
-                }
-            }
-            return new_first;
-        }
 
         // Селекция
         // Отбираем каким-то образом решения

@@ -96,8 +96,8 @@ namespace mtsp
             int number_of_assigneg_shops = 0;
             for (int j = 0; j < number_of_cars - 1; ++j)
             {
-                // сначала генерируем число
-                int random_number = rand.Next(1, number_of_shops - (number_of_cars - j) - number_of_assigneg_shops + 1);
+                // сначала генерируем случайное количество оставшихся магазинов
+                int random_number = rand.Next(1, number_of_shops - (number_of_cars - j) - number_of_assigneg_shops + 2);
                 // и присваиваем случайной машине, которая еще не присваивалась
                 int random_position = Global.GetRandomFree(is_assigned, number_of_cars - j);
                 car_path_lengths[random_position] = random_number;
@@ -126,6 +126,21 @@ namespace mtsp
                 is_assigned[random_shop] = true;
                 shops[position] = random_shop;
             }
+        }
+
+        public string GetString(List<int> global_shops)
+        {
+            string str = "";
+            foreach(int shop in shops)
+            {
+                str += global_shops[shop] + " ";
+            }
+            str += "| ";
+            foreach(int car_path in car_path_lengths)
+            {
+                str += car_path + " ";
+            }
+            return str;
         }
     }
 }
