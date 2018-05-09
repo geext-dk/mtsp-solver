@@ -7,8 +7,10 @@ namespace mtsp
     public class MtspSolver
     {
         public static int InitialNumber = 8;
-        public static int CrossoverNumber = InitialNumber;
-        public static int MutationNumber = InitialNumber;
+        public static int CrossoverNumber = InitialNumber;  // т. е. + InitialNumber особей
+        public static int MutationNumber = InitialNumber;  // т. е. + еще InitialNumber особей (итого 3 * InitialNumber)
+        // следовательно для получения изначально числа, нужно оставить 2/3 особей
+        public static int SelectionGroupSize = 3;
 
         private int[,] adjacency_matrix;
         private int number_of_cars;
@@ -59,7 +61,18 @@ namespace mtsp
                 }
 
                 // Селекция
-                Selection();
+                Solution best_solution = Selection();
+                // Выводим
+                foreach (int shop in best_solution.GetShops())
+                {
+                    Console.Write(shop + " ");
+                }
+                Console.Write("| ");
+                foreach(int car in best_solution.GetCarPathLengths())
+                {
+                    Console.Write(car + " ");
+                }
+                Console.WriteLine();
             }
         }
 
@@ -171,9 +184,47 @@ namespace mtsp
 
         // Селекция
         // Отбираем каким-то образом решения
-        private void Selection()
+        private Solution Selection()
         {
+            List<Solution>[] groups = new List<Solution>[InitialNumber];
+            bool[] is_assigned = new bool[population.Count];
+            for (int i = 0; i < population.Count; ++i)
+            {
+                int position = Global.GetRandomFree(is_assigned, population.Count - i);
+                groups[i / 3].Add(population[position]);
+            }
 
+            List<Solution> new_population = new List<Solution>();
+            List<int> function_results = new List<int>();
+            // отбираем наилучшее решение среди каждой группы
+            foreach(List<Solution> group in groups)
+            {
+                int minimum_index = 0;
+                int minimum_function_result = ObjectiveFunction(group[0]);
+                for (int i = 1; i < group.Count; ++i)
+                {
+                    int function_result = ObjectiveFunction(group[i]);
+                    if (minimum_function_result > function_result)
+                    {
+                        minimum_function_result = function_result;
+                        minimum_index = i;
+                    }
+                }
+                new_population.Add(group[minimum_index]);
+                function_results.Add(minimum_function_result);
+            }
+            population = new_population;
+            int minimum = function_results[0];
+            int index = 0;
+            for (int i = 1; i < population.Count; ++i)
+            {
+                if (function_results[i] < minimum)
+                {
+                    minimum = function_results[i];
+                    index = i;
+                }
+            }
+            return population[index].Copy();
         }
     }
 }

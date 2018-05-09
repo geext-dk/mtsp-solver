@@ -41,11 +41,11 @@ namespace Tests
 
         // Проверка GetCarPathLength
         [Fact]
-        public void TestGetCarPathLength()
+        public void TestGetCarPathLengths()
         {
             for (int i = 0; i < number_of_cars_; ++i)
             {
-                Assert.Equal(car_path_lengths_[i], solution_.GetCarPathLength(i));
+                Assert.Equal(car_path_lengths_[i], solution_.GetCarPathLengths()[i]);
             }
         }
 

@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Edge.cs" />
+    <Compile Include="Global.cs" />
     <Compile Include="MtspSolver.cs" />
     <Compile Include="Products.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

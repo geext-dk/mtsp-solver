@@ -46,9 +46,9 @@ namespace mtsp
             return number_of_cars;
         }
         
-        public int GetCarPathLength(int car_number)
+        public int[] GetCarPathLengths()
         {
-            return car_path_lengths[car_number];
+            return car_path_lengths;
         }
 
         public int[] GetShops()
@@ -100,7 +100,7 @@ namespace mtsp
                 int random_number = rand.Next()
                         % (number_of_shops - (number_of_cars - j) - number_of_assigneg_shops + 1) + 1;
                 // и присваиваем случайной машине, которая еще не присваивалась
-                int random_position = GetRandomFree(is_assigned, number_of_cars - j);
+                int random_position = Global.GetRandomFree(is_assigned, number_of_cars - j);
                 car_path_lengths[random_position] = random_number;
                 is_assigned[random_position] = true;
                 number_of_assigneg_shops += random_number;
@@ -123,27 +123,10 @@ namespace mtsp
             bool[] is_assigned = new bool[number_of_shops];
             for (int position = 0; position < number_of_shops; ++position)
             {
-                int random_shop = GetRandomFree(is_assigned, number_of_shops - position);
+                int random_shop = Global.GetRandomFree(is_assigned, number_of_shops - position);
                 is_assigned[random_shop] = true;
                 shops[position] = random_shop;
             }
-        }
-
-        private int GetRandomFree(bool[] is_assigned, int number_of_free)
-        {
-            Random rand = new Random();
-            int random_position = rand.Next() % number_of_free;
-            int k = -1;
-            do
-            {
-                ++k;
-                if (is_assigned[k])
-                {
-                    ++random_position;
-                }
-            }
-            while (k != random_position);
-            return random_position;
         }
     }
 }
