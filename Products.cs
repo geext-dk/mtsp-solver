@@ -11,6 +11,16 @@ namespace mtsp
         //
         static void Main(string[] args)
         {
+            int cars = 0;
+            if (args.Length != 1)
+            {
+                Console.WriteLine(@"Usage: .\ASD.exe <количество машин>");
+                return;
+            }
+            else
+            {
+                cars = int.Parse(args[0]);
+            }
             // ДАНО:
             // Город в виде графа... (список смежности)
             Dictionary<int, List<Edge>> adjacency_list;
@@ -29,11 +39,11 @@ namespace mtsp
             int[] storage_distance;
             ConvertToCompleteGraph(adjacency_list, shops, storage, out adjacency_matrix, out storage_distance);
 
-            // инициализируем решатель
-            MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, storage_distance, number_of_cars);
 
-            // решаем
-            solver.Solve(1000);
+            // инициализируем решатель
+            MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, storage_distance, cars);
+
+            solver.Solve();
         }
 
 
@@ -108,7 +118,6 @@ namespace mtsp
             }
             catch (Exception e)
             {
-
                 Console.WriteLine(e.StackTrace);
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error during reading input file: " + input_file);
@@ -119,7 +128,6 @@ namespace mtsp
                 return false;
             }
         }
-
 
         // Функция, переводящая наш граф в полный, содержащий только магазины и склад
         // Предполагает, что каждая вершина смежна с какой-то другой!

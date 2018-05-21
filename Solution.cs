@@ -4,7 +4,6 @@ using System;
 
 namespace mtsp
 {
-
     // Класс решений. Каждый объект содержит конкретное решение
     // Каждое решение закодировано в массиве следующим образом:
     // Размер массива - number_of_shops + number_of_cars
@@ -86,8 +85,8 @@ namespace mtsp
             int number_of_assigneg_shops = 0;
             for (int j = 0; j < number_of_cars - 1; ++j)
             {
-                // сначала генерируем случайное количество оставшихся магазинов
-                int random_number = rand.Next(1, number_of_shops - (number_of_cars - j) - number_of_assigneg_shops + 2);
+                // сначала генерируем случайное количество магазинов
+                int random_number = rand.Next(2, number_of_shops - 2 * (number_of_cars - j) - number_of_assigneg_shops + 2);
                 // и присваиваем случайной машине, которая еще не присваивалась
                 int random_position = Global.GetRandomFree(is_assigned, number_of_cars - j);
                 car_path_lengths[random_position] = random_number;
@@ -133,7 +132,7 @@ namespace mtsp
             return str;
         }
 
-        public string GetString(List<int> global_shops)
+        public string GetGlobalString(List<int> global_shops)
         {
             string str = "";
             foreach(int shop in shops)
