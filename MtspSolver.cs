@@ -4,10 +4,6 @@ using System.Collections.Generic;
 namespace mtsp
 {
     // Класс уже оперирует над измененным (полным) графом
-    // тип T должен иметь:
-    // int T.GetWeight(int first_vertex, int second_vertex)
-    // int T.GetNumberOfShops()
-
     public class MtspSolver
     {
         public static int MaximumSameResults = 1000;
@@ -54,25 +50,15 @@ namespace mtsp
             Solution best_solution = new Solution(number_of_shops, number_of_cars);
             int function_result = 0;
             while (i < MaximumSameResults) {
-                // Мутация
-                for (int j = 0; j < MutationNumber; ++j) {
-                    int chromosome = rand.Next(0, population.Count);
-                    population.Add(Mutation(population[chromosome], rand.Next()));
-                }
-
-                // Скрещивание
-                if (number_of_shops > 2) {
-                    for (int j = 0; j < CrossoverNumber; ++j) {
-                        population.Add(Crossover());
-                    }
-                }
-
-                // Селекция
+                Mutation();
+                Crossover();
                 Selection(out best_solution, out function_result);
 
+                // отсчитываем циклы с последнего изменения лучшего результата
                 if (last != function_result) {
                     cycles += i;
                     last = function_result;
+                    // Выводим новый лучши результат
                     Console.WriteLine(function_result);
                     i = 0;
                 } else {
@@ -80,7 +66,7 @@ namespace mtsp
                 }
             }
             cycles += i;
-            // Выводим
+            // Выводим итоговый лучший результат и последовательность магазинов
             Console.WriteLine(function_result + ": " + best_solution.GetGlobalString(global_shops));
             Console.WriteLine("Cycles: " + cycles);
         }
@@ -121,87 +107,89 @@ namespace mtsp
 
         // Скрещивание
         // Скрещиваем какие-то решения из population
-        private Solution Crossover()
+        private void Crossover()
         {
-            // Выбираются две случайные хромосомы
-            int first_chromosome = rand.Next(0, population.Count);
-            int second_chromosome;
-            do {
-                second_chromosome = rand.Next(0, population.Count);
-            } while (first_chromosome == second_chromosome);
-            Solution first = population[first_chromosome];
-            Solution second = population[second_chromosome];
+            if (number_of_shops < 2) {
+                return;
+            }
 
-            // Скрещивание
-            int[] second_shops = second.GetShops();
-            Solution child = first.Copy();
-            // Если количество магазинов меньше 2, то скрещивать-то и нечего
-            if (number_of_shops > 2)
+            for (int number = 0; number < CrossoverNumber; ++number)
             {
-                int[] child_shops = child.GetShops();
-                bool[] is_assigned = new bool[number_of_shops];
-                bool[] is_shop_assigned = new bool[number_of_shops];
+                // Выбираются две случайные хромосомы
+                int first_chromosome = rand.Next(0, population.Count);
+                int second_chromosome;
+                do {
+                    second_chromosome = rand.Next(0, population.Count);
+                } while (first_chromosome == second_chromosome);
+                Solution first = population[first_chromosome];
+                Solution second = population[second_chromosome];
 
-                // Рандомно получаем последовательность из первого родителя и переносим ребёнку
-                int length = rand.Next(1, number_of_shops - 1);
-                int start_with = rand.Next(1, number_of_shops - length);
-                for (int i = start_with; i < length + start_with; ++i)
+                // Скрещивание
+                int[] second_shops = second.GetShops();
+                Solution child = first.Copy();
+                // Если количество магазинов меньше 2, то скрещивать-то и нечего
+                if (number_of_shops > 2)
                 {
-                    is_assigned[i] = true;
-                    is_shop_assigned[child_shops[i]] = true;
-                }
+                    int[] child_shops = child.GetShops();
+                    bool[] is_assigned = new bool[number_of_shops];
+                    bool[] is_shop_assigned = new bool[number_of_shops];
 
-                // Оставшиеся магазины переносим в ребёнка из второго родителя
-                for (int i = 0; i < number_of_shops; ++i)
-                {
-                    // находим первую необработанную ячейку
-                    if (is_assigned[i])
+                    // Рандомно получаем последовательность из первого родителя и переносим ребёнку
+                    int length = rand.Next(1, number_of_shops - 1);
+                    int start_with = rand.Next(1, number_of_shops - length);
+                    for (int i = start_with; i < length + start_with; ++i)
                     {
-                        continue;
+                        is_assigned[i] = true;
+                        is_shop_assigned[child_shops[i]] = true;
                     }
-                    // и присваиваем первый не присвоенный магазин
-                    foreach (int second_shop in second_shops)
+
+                    // Оставшиеся магазины переносим в ребёнка из второго родителя
+                    for (int i = 0; i < number_of_shops; ++i)
                     {
-                        if (!is_shop_assigned[second_shop])
+                        // находим первую необработанную ячейку
+                        if (is_assigned[i])
                         {
-                            child_shops[i] = second_shop;
-                            is_assigned[i] = true;
-                            is_shop_assigned[second_shop] = true;
-                            break;
+                            continue;
+                        }
+                        // и присваиваем первый не присвоенный магазин
+                        foreach (int second_shop in second_shops)
+                        {
+                            if (!is_shop_assigned[second_shop])
+                            {
+                                child_shops[i] = second_shop;
+                                is_assigned[i] = true;
+                                is_shop_assigned[second_shop] = true;
+                                break;
+                            }
                         }
                     }
                 }
+                population.Add(child);
             }
-            return child;
         }
 
         // Мутация 
         // Изменяем каким-то образом решения из population
-        private Solution Mutation(Solution solution, int type)
+        private void Mutation()
         {
-            Solution new_solution = solution.Copy();
-            // Первый тип: меняем местами случайные элементы среди магазинов
-            int chance = type % 10;
-            if (chance == 0 || chance == 1 || chance == 2) {
-                MutateSwap(new_solution);
+            // Выполняем MutationNumber раз
+            for (int number = 0; number < MutationNumber; ++number) {
+                int chromosome = rand.Next(0, population.Count);
+
+                Solution new_solution = population[chromosome].Copy();
+                // Первый тип: меняем местами случайные элементы среди магазинов
+                int chance = rand.Next(0, 2);
+                
+                if (chance == 1) {//0 || chance == 1 || chance == 2) {  // Меняем местами
+                    MutateSwap(new_solution);
+                } else {// if (chance == 3 || chance == 4) {  // вычитание и прибавление длины пути
+                    MutateAdjust(new_solution);
+                } /*else if (chance == 5) {      // обе мутации
+                    MutateSwap(new_solution);
+                    MutateAdjust(new_solution);
+                }*/
+                population.Add(new_solution);
             }
-            
-            /*
-            // Второй тип: перегенерируем количество магазинов, которые проезжает каждая машина
-            else if (chance == 3 || chance == 4)
-            {
-                new_solution.RegenerateCarPathLengths();
-            }*/
-            else if (chance == 3 || chance == 4) {
-                MutateAdjust(new_solution);
-            }
-            // третий тип: обе мутации
-            else if (chance == 5)
-            {
-                MutateSwap(new_solution);
-                MutateAdjust(new_solution);
-            }
-            return new_solution;
         }
 
         private void MutateSwap(Solution solution)
