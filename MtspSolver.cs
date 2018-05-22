@@ -4,6 +4,10 @@ using System.Collections.Generic;
 namespace mtsp
 {
     // Класс уже оперирует над измененным (полным) графом
+    // тип T должен иметь:
+    // int T.GetWeight(int first_vertex, int second_vertex)
+    // int T.GetNumberOfShops()
+
     public class MtspSolver
     {
         public static int MaximumSameResults = 1000;
@@ -14,7 +18,7 @@ namespace mtsp
         public static int SelectionGroupSize =
                 (InitialNumber + CrossoverNumber + MutationNumber) / InitialNumber;
 
-        private readonly int[,] adjacency_matrix;
+        private readonly Graph graph;
         private readonly int number_of_cars;
         private readonly int number_of_shops;
         private List<Solution> population;
@@ -25,17 +29,17 @@ namespace mtsp
         // конструктор
         // Мы преобразовываем глобальное решение в локальное (т. е. индексы из изначально графа
         // преобразуются в индексы в полного графа
-        public MtspSolver(int[,] adjacency_matrix, List<int> global_shops, int storage,
+        public MtspSolver(Graph graph, List<int> global_shops, int storage,
                 int[] storage_distance, int number_of_cars)
         {
             rand = new Random();
             population = new List<Solution>();
 
-            this.adjacency_matrix = adjacency_matrix;
+            this.graph = graph;
             this.global_shops = global_shops;
             this.number_of_cars = number_of_cars;
             this.storage_distance = storage_distance;
-            number_of_shops = adjacency_matrix.GetLength(0);
+            number_of_shops = graph.GetNumberOfShops();
         }
 
         // Запускаемая функция для решения задачи. Выполняется times раз
@@ -93,7 +97,7 @@ namespace mtsp
                 int previous_shop = car_path[0];
                 for (int i = 1; i < car_path.Length; ++i)
                 {
-                    distance += adjacency_matrix[previous_shop, car_path[i]];
+                    distance += graph.GetWeight(previous_shop, car_path[i]);
                     previous_shop = car_path[i];
                 }
                 distance += storage_distance[previous_shop];
@@ -178,44 +182,57 @@ namespace mtsp
             Solution new_solution = solution.Copy();
             // Первый тип: меняем местами случайные элементы среди магазинов
             int chance = type % 10;
-            if (chance == 0 || chance == 1 || chance == 2)
-            {
-                int[] shops = new_solution.GetShops();
-                int first = rand.Next(0, number_of_shops);
-                int second;
-                do
-                {
-                    second = rand.Next(0, number_of_shops);
-                }
-                while (first == second);
-                int x = shops[first];
-                shops[first] = shops[second];
-                shops[second] = x;
+            if (chance == 0 || chance == 1 || chance == 2) {
+                MutateSwap(new_solution);
             }
+            
+            /*
             // Второй тип: перегенерируем количество магазинов, которые проезжает каждая машина
             else if (chance == 3 || chance == 4)
             {
                 new_solution.RegenerateCarPathLengths();
+            }*/
+            else if (chance == 3 || chance == 4) {
+                MutateAdjust(new_solution);
             }
             // третий тип: обе мутации
             else if (chance == 5)
             {
-                int[] shops = new_solution.GetShops();
-                int first = rand.Next(0, number_of_shops);
-                int second;
-                do
-                {
-                    second = rand.Next(0, number_of_shops);
-                }
-                while (first == second);
-                int x = shops[first];
-                shops[first] = shops[second];
-                shops[second] = x;
-                new_solution.RegenerateCarPathLengths();
+                MutateSwap(new_solution);
+                MutateAdjust(new_solution);
             }
             return new_solution;
         }
 
+        private void MutateSwap(Solution solution)
+        {
+            int[] shops = solution.GetShops();
+            int first_shop = rand.Next(0, number_of_shops);
+            int second_shop = rand.Next(0, number_of_shops);
+            while (first_shop == second_shop) {
+                second_shop = rand.Next(0, number_of_shops);
+            }
+            int x = shops[first_shop];
+            shops[first_shop] = shops[second_shop];
+            shops[second_shop] = x;
+        }
+
+        private void MutateAdjust(Solution solution)
+        {
+            int[] cars = solution.GetCarPathLengths();
+            int first_car = rand.Next(0, number_of_cars);
+            int second_car = rand.Next(0, number_of_cars);
+            while (first_car == second_car) {
+                second_car = rand.Next(0, number_of_cars);
+            }
+
+            if (cars[first_car] == 1) {
+                return;
+            }
+            int adjustment = rand.Next(1, cars[first_car] - 1);
+            cars[first_car] -= adjustment;
+            cars[second_car] += adjustment;
+        }
 
         // Селекция
         // Отбираем каким-то образом решения

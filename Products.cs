@@ -27,11 +27,13 @@ namespace mtsp
             // Переводим в полный граф
             int[,] adjacency_matrix;
             int[] storage_distance;
-            ConvertToCompleteGraph(adjacency_list, shops, storage, out adjacency_matrix, out storage_distance);
+            ConvertToCompleteGraph(adjacency_list, shops, storage, out adjacency_matrix,
+                                   out storage_distance);
 
 
             // инициализируем решатель
-            MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, storage_distance, number_of_cars);
+            MtspSolver solver = new MtspSolver
+                    (new Graph(adjacency_matrix), shops, storage, storage_distance, number_of_cars);
 
             solver.Solve();
         }
@@ -153,7 +155,7 @@ namespace mtsp
             {
                 storage_distance[shop] = distance[shops[shop]];
             }
-            Console.WriteLine("done.");
+            Console.WriteLine("done");
         }
     }
 }

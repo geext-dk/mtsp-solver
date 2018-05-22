@@ -45,6 +45,11 @@ namespace mtsp
             return shops;
         }
 
+        public int[] GetCarPathLengths()
+        {
+            return car_path_lengths;
+        }
+
         public Solution Copy()
         {
             return new Solution(shops, car_path_lengths);
