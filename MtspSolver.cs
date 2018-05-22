@@ -3,30 +3,27 @@ using System.Collections.Generic;
 
 namespace mtsp
 {
-    // Класс уже оперирует над измененным (полным) графом
     public class MtspSolver
     {
+        // ========================
         public static int MaximumSameResults = 1000;
         public static int InitialNumber = 16;
-        public static int CrossoverNumber = InitialNumber;  // т. е. + InitialNumber особей
-        public static int MutationNumber = InitialNumber;  // т. е. + еще InitialNumber особей (итого 3 * InitialNumber)
-        // следовательно для получения изначально числа, нужно оставить 2/3 особей
+        public static int CrossoverNumber = InitialNumber;
+        public static int MutationNumber = InitialNumber;
         public static int SelectionGroupSize =
-                (InitialNumber + CrossoverNumber + MutationNumber) / InitialNumber;
+            (InitialNumber + CrossoverNumber + MutationNumber) / InitialNumber;
+        // ========================
 
         private readonly Graph graph;
         private readonly int number_of_cars;
         private readonly int number_of_shops;
         private List<Solution> population;
-        private readonly List<int> global_shops;
-        private readonly int[] storage_distance;
+        private readonly int[] global_shops;
+        private readonly int[] distance_from_storage_to;
         private readonly Random rand;
 
-        // конструктор
-        // Мы преобразовываем глобальное решение в локальное (т. е. индексы из изначально графа
-        // преобразуются в индексы в полного графа
-        public MtspSolver(Graph graph, List<int> global_shops, int storage,
-                int[] storage_distance, int number_of_cars)
+        public MtspSolver(Graph graph, int[] global_shops, int storage,
+                int[] distance_from_storage_to, int number_of_cars)
         {
             rand = new Random();
             population = new List<Solution>();
@@ -34,88 +31,72 @@ namespace mtsp
             this.graph = graph;
             this.global_shops = global_shops;
             this.number_of_cars = number_of_cars;
-            this.storage_distance = storage_distance;
+            this.distance_from_storage_to = distance_from_storage_to;
             number_of_shops = graph.GetNumberOfShops();
         }
 
-        // Запускаемая функция для решения задачи. Выполняется times раз
         public void Solve()
         {
             int cycles = 0;
-            // генерируем начальные решения
+
             GenerateInitialPopulation();
-            // алгоритм
+
             int i = 0;
-            int last = 0; // последний результат функции
-            Solution best_solution = new Solution(number_of_shops, number_of_cars);
-            int function_result = 0;
-            while (i < MaximumSameResults) {
+            int best_result = 0;
+            int last_best_result = 0;
+            Solution best_solution;
+            do {
                 Mutation();
                 Crossover();
-                Selection(out best_solution, out function_result);
+                Selection(out best_solution, out best_result);
 
-                // отсчитываем циклы с последнего изменения лучшего результата
-                if (last != function_result) {
+                if (last_best_result != best_result) {
                     cycles += i;
-                    last = function_result;
-                    // Выводим новый лучши результат
-                    Console.WriteLine(function_result);
                     i = 0;
+                    last_best_result = best_result;
+                    Console.WriteLine(best_result);
                 } else {
                     ++i;
                 }
-            }
+            } while (i < MaximumSameResults);
             cycles += i;
-            // Выводим итоговый лучший результат и последовательность магазинов
-            Console.WriteLine(function_result + ": " + best_solution.GetGlobalString(global_shops));
+            
+            Console.WriteLine(best_result + ": " + best_solution.GetGlobalString(global_shops));
             Console.WriteLine("Cycles: " + cycles);
         }
 
-
-        // Целевая функция
-        // ищет максимальный путь среди всех машин (который нам надо уменьшить)
         private int ObjectiveFunction(Solution solution)
         {
-            int max_distance = 0;
-            foreach (int[] car_path in solution)
-            {
-                int distance = storage_distance[car_path[0]];
+            int maximum_distance = 0;
+            foreach (int[] car_path in solution) {
+                int distance = distance_from_storage_to[car_path[0]];
                 int previous_shop = car_path[0];
-                for (int i = 1; i < car_path.Length; ++i)
-                {
+                for (int i = 1; i < car_path.Length; ++i) {
                     distance += graph.GetWeight(previous_shop, car_path[i]);
                     previous_shop = car_path[i];
                 }
-                distance += storage_distance[previous_shop];
-                if (distance > max_distance)
-                {
-                    max_distance = distance;
+                distance += distance_from_storage_to[previous_shop];
+                if (distance > maximum_distance) {
+                    maximum_distance = distance;
                 }
             }
-            return max_distance;
+            return maximum_distance;
         }
 
-        // генерируем начальную популяцию
-        // тут заполняем поле population случайными особями
         private void GenerateInitialPopulation()
         {
-            for (int i = 0; i < InitialNumber; ++i)
-            {
+            for (int i = 0; i < InitialNumber; ++i) {
                 this.population.Add(new Solution(number_of_shops, number_of_cars));
             }
         }
 
-        // Скрещивание
-        // Скрещиваем какие-то решения из population
         private void Crossover()
         {
             if (number_of_shops < 2) {
                 return;
             }
 
-            for (int number = 0; number < CrossoverNumber; ++number)
-            {
-                // Выбираются две случайные хромосомы
+            for (int number = 0; number < CrossoverNumber; ++number) {
                 int first_chromosome = rand.Next(0, population.Count);
                 int second_chromosome;
                 do {
@@ -124,43 +105,32 @@ namespace mtsp
                 Solution first = population[first_chromosome];
                 Solution second = population[second_chromosome];
 
-                // Скрещивание
-                int[] second_shops = second.GetShops();
+
+                int[] second_shops_array = second.GetShopsArray();
                 Solution child = first.Copy();
-                // Если количество магазинов меньше 2, то скрещивать-то и нечего
-                if (number_of_shops > 2)
-                {
-                    int[] child_shops = child.GetShops();
-                    bool[] is_assigned = new bool[number_of_shops];
-                    bool[] is_shop_assigned = new bool[number_of_shops];
+                int[] child_shops_array = child.GetShopsArray();
+                bool[] is_position_assigned = new bool[number_of_shops];
+                bool[] is_shop_assigned = new bool[number_of_shops];
 
-                    // Рандомно получаем последовательность из первого родителя и переносим ребёнку
-                    int length = rand.Next(1, number_of_shops - 1);
-                    int start_with = rand.Next(1, number_of_shops - length);
-                    for (int i = start_with; i < length + start_with; ++i)
-                    {
-                        is_assigned[i] = true;
-                        is_shop_assigned[child_shops[i]] = true;
+
+                int length = rand.Next(1, number_of_shops - 1);
+                int start_with = rand.Next(1, number_of_shops - length);
+                for (int i = start_with; i < length + start_with; ++i) {
+                    is_position_assigned[i] = true;
+                    is_shop_assigned[child_shops_array[i]] = true;
+                }
+
+                for (int i = 0; i < number_of_shops; ++i) {
+                    if (is_position_assigned[i]) {
+                        continue;
                     }
-
-                    // Оставшиеся магазины переносим в ребёнка из второго родителя
-                    for (int i = 0; i < number_of_shops; ++i)
-                    {
-                        // находим первую необработанную ячейку
-                        if (is_assigned[i])
-                        {
-                            continue;
-                        }
-                        // и присваиваем первый не присвоенный магазин
-                        foreach (int second_shop in second_shops)
-                        {
-                            if (!is_shop_assigned[second_shop])
-                            {
-                                child_shops[i] = second_shop;
-                                is_assigned[i] = true;
-                                is_shop_assigned[second_shop] = true;
-                                break;
-                            }
+                    
+                    foreach (int second_shop in second_shops_array) {
+                        if (!is_shop_assigned[second_shop]) {
+                            child_shops_array[i] = second_shop;
+                            is_position_assigned[i] = true;
+                            is_shop_assigned[second_shop] = true;
+                            break;
                         }
                     }
                 }
@@ -168,33 +138,27 @@ namespace mtsp
             }
         }
 
-        // Мутация 
-        // Изменяем каким-то образом решения из population
         private void Mutation()
         {
-            // Выполняем MutationNumber раз
             for (int number = 0; number < MutationNumber; ++number) {
                 int chromosome = rand.Next(0, population.Count);
 
                 Solution new_solution = population[chromosome].Copy();
-                // Первый тип: меняем местами случайные элементы среди магазинов
+                
                 int chance = rand.Next(0, 2);
                 
-                if (chance == 1) {//0 || chance == 1 || chance == 2) {  // Меняем местами
+                if (chance == 1) {
                     MutateSwap(new_solution);
-                } else {// if (chance == 3 || chance == 4) {  // вычитание и прибавление длины пути
+                } else {
                     MutateAdjust(new_solution);
-                } /*else if (chance == 5) {      // обе мутации
-                    MutateSwap(new_solution);
-                    MutateAdjust(new_solution);
-                }*/
+                }
                 population.Add(new_solution);
             }
         }
 
         private void MutateSwap(Solution solution)
         {
-            int[] shops = solution.GetShops();
+            int[] shops = solution.GetShopsArray();
             int first_shop = rand.Next(0, number_of_shops);
             int second_shop = rand.Next(0, number_of_shops);
             while (first_shop == second_shop) {
@@ -207,7 +171,7 @@ namespace mtsp
 
         private void MutateAdjust(Solution solution)
         {
-            int[] cars = solution.GetCarPathLengths();
+            int[] cars = solution.GetPathLengths();
             int first_car = rand.Next(0, number_of_cars);
             int second_car = rand.Next(0, number_of_cars);
             while (first_car == second_car) {
@@ -222,17 +186,13 @@ namespace mtsp
             cars[second_car] += adjustment;
         }
 
-        // Селекция
-        // Отбираем каким-то образом решения
         private void Selection(out Solution best_solution, out int best_function_result)
         {
             List<Solution>[] groups = new List<Solution>[InitialNumber];
             bool[] is_assigned = new bool[population.Count];
-            for (int i = 0; i < population.Count; ++i)
-            {
+            for (int i = 0; i < population.Count; ++i) {
                 int position = Global.GetRandomFree(is_assigned, population.Count - i);
-                if (i % SelectionGroupSize == 0)
-                {
+                if (i % SelectionGroupSize == 0) {
                     groups[i / SelectionGroupSize] = new List<Solution>();
                 }
                 groups[i / SelectionGroupSize].Add(population[position]);
@@ -241,7 +201,7 @@ namespace mtsp
 
             List<Solution> new_population = new List<Solution>();
             List<int> function_results = new List<int>();
-            // отбираем наилучшее решение среди каждой группы
+            
             foreach(List<Solution> group in groups)
             {
                 int minimum_index = 0;
@@ -261,10 +221,8 @@ namespace mtsp
             population = new_population;
             int minimum = function_results[0];
             int index = 0;
-            for (int i = 1; i < population.Count; ++i)
-            {
-                if (function_results[i] < minimum)
-                {
+            for (int i = 1; i < population.Count; ++i) {
+                if (function_results[i] < minimum) {
                     minimum = function_results[i];
                     index = i;
                 }

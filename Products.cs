@@ -16,10 +16,11 @@ namespace mtsp
             Dictionary<int, List<Edge>> adjacency_list;
             int number_of_cars;      // Количество задействованных машин
             int storage;             // склад
-            List<int> shops;         // Список магазинов
+            int number_of_shops;
+            int[] shops;         // Список магазинов
 
             if (!ReadData("input.txt", out adjacency_list, out number_of_cars,
-                     out storage, out shops))
+                     out number_of_shops, out storage, out shops))
             {
                 return;
             }
@@ -41,8 +42,8 @@ namespace mtsp
 
         // Функция, читающая данные из переданного файла
         public static bool ReadData(string input_file,
-                out Dictionary<int, List<Edge>> adjacency_list,
-                out int number_of_cars, out int storage, out List<int> shops)
+                out Dictionary<int, List<Edge>> adjacency_list, out int number_of_cars,
+                out int number_of_shops, out int storage, out int[] shops)
         {
             try
             {
@@ -51,7 +52,6 @@ namespace mtsp
                     throw new FileNotFoundException(input_file);
                 }
                 adjacency_list = new Dictionary<int, List<Edge>>();
-                shops = new List<int>();
 
                 // Читаем входные данные
                 
@@ -62,18 +62,20 @@ namespace mtsp
                     string line = reader.ReadLine();
                     string[] bits = line.Split(' ');
                     number_of_cars = int.Parse(bits[1]);
-                    storage = int.Parse(bits[2]);
+                    number_of_shops = int.Parse(bits[2]);
+                    storage = int.Parse(bits[3]);
+                    shops = new int[number_of_shops];
 
                     // На следующей строке расположен список магазинов
                     line = reader.ReadLine();
                     bits = line.Split(' ');
-                    foreach (string shop in bits)
+                    for (int i = 0; i < number_of_shops; ++i)
                     {
-                        if (shop.Length == 0)
+                        if (bits[i].Length == 0)
                         {
                             continue;
                         }
-                        shops.Add(int.Parse(shop));
+                        shops[i] = int.Parse(bits[i]);
                     }
 
                     // После этого идёт список дорог и их расстояния в формате:
@@ -115,6 +117,7 @@ namespace mtsp
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error during reading input file: " + input_file);
                 number_of_cars = 0;
+                number_of_shops = 0;
                 storage = 0;
                 adjacency_list = null;
                 shops = null;
@@ -125,12 +128,13 @@ namespace mtsp
         // Функция, переводящая наш граф в полный, содержащий только магазины и склад
         // Предполагает, что каждая вершина смежна с какой-то другой!
         public static void ConvertToCompleteGraph(Dictionary<int, List<Edge>> adjacency_list,
-                List<int> shops, int storage, out int[,] adjacency_matrix, out int[] storage_distance)
+                int[] shops, int storage, out int[,] adjacency_matrix, out int[] storage_distance)
         {
+            int number_of_shops = shops.Length;
             Console.Write("Converting graph... ");
-            adjacency_matrix = new int[shops.Count, shops.Count];
+            adjacency_matrix = new int[number_of_shops, number_of_shops];
 
-            for(int shop = 0; shop < shops.Count; ++shop)
+            for(int shop = 0; shop < number_of_shops; ++shop)
             {
                 int[] shop_distance;
                 int[] shop_previous;
@@ -138,7 +142,7 @@ namespace mtsp
 
                 // тут мы теперь имеем расстояние от магазина shop до всех остальных магазинов.
                 // пихаем информацию в матрицу смежности
-                for (int connected_shop = 0; connected_shop < shops.Count; ++connected_shop)
+                for (int connected_shop = 0; connected_shop < number_of_shops; ++connected_shop)
                 {
                     adjacency_matrix[shop, connected_shop] = shop_distance[shops[connected_shop]];
                     adjacency_matrix[connected_shop, shop] = shop_distance[shops[connected_shop]];
@@ -147,11 +151,11 @@ namespace mtsp
             }
 
             // заполним отдельно массив расстояний от склада до остальных вершин
-            storage_distance = new int[shops.Count];
+            storage_distance = new int[number_of_shops];
             int[] distance;
             int[] previous;
             Global.Dijkstra(adjacency_list, storage, out distance, out previous);
-            for (int shop = 0; shop < shops.Count; ++shop)
+            for (int shop = 0; shop < number_of_shops; ++shop)
             {
                 storage_distance[shop] = distance[shops[shop]];
             }
