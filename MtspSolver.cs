@@ -6,10 +6,10 @@ namespace mtsp
     // Класс уже оперирует над измененным (полным) графом
     public class MtspSolver
     {
-        public static int MaximumSameResults = 10;
-        public static int InitialNumber = 8;
+        public static int MaximumSameResults = 1000;
+        public static int InitialNumber = 16;
         public static int CrossoverNumber = InitialNumber;  // т. е. + InitialNumber особей
-        public static int MutationNumber = InitialNumber * 2;  // т. е. + еще InitialNumber особей (итого 3 * InitialNumber)
+        public static int MutationNumber = InitialNumber;  // т. е. + еще InitialNumber особей (итого 3 * InitialNumber)
         // следовательно для получения изначально числа, нужно оставить 2/3 особей
         public static int SelectionGroupSize =
                 (InitialNumber + CrossoverNumber + MutationNumber) / InitialNumber;
@@ -59,14 +59,7 @@ namespace mtsp
                 // Скрещивание
                 if (number_of_shops > 2) {
                     for (int j = 0; j < CrossoverNumber; ++j) {
-                        int first_chromosome = rand.Next(0, population.Count);
-                        int second_chromosome;
-                        do {
-                            second_chromosome = rand.Next(0, population.Count);
-                        } while (first_chromosome == second_chromosome);
-                        Solution child = Crossover(population[first_chromosome],
-                                                   population[second_chromosome]);
-                        population.Add(child);
+                        population.Add(Crossover());
                     }
                 }
 
@@ -76,6 +69,7 @@ namespace mtsp
                 if (last != function_result) {
                     cycles += i;
                     last = function_result;
+                    Console.WriteLine(function_result);
                     i = 0;
                 } else {
                     ++i;
@@ -85,7 +79,6 @@ namespace mtsp
             // Выводим
             Console.WriteLine(function_result + ": " + best_solution.GetGlobalString(global_shops));
             Console.WriteLine("Cycles: " + cycles);
-
         }
 
 
@@ -124,11 +117,19 @@ namespace mtsp
 
         // Скрещивание
         // Скрещиваем какие-то решения из population
-        private Solution Crossover(Solution first, Solution second)
+        private Solution Crossover()
         {
+            // Выбираются две случайные хромосомы
+            int first_chromosome = rand.Next(0, population.Count);
+            int second_chromosome;
+            do {
+                second_chromosome = rand.Next(0, population.Count);
+            } while (first_chromosome == second_chromosome);
+            Solution first = population[first_chromosome];
+            Solution second = population[second_chromosome];
+
+            // Скрещивание
             int[] second_shops = second.GetShops();
-
-
             Solution child = first.Copy();
             // Если количество магазинов меньше 2, то скрещивать-то и нечего
             if (number_of_shops > 2)

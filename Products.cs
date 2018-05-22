@@ -11,16 +11,6 @@ namespace mtsp
         //
         static void Main(string[] args)
         {
-            int cars = 0;
-            if (args.Length != 1)
-            {
-                Console.WriteLine(@"Usage: .\ASD.exe <количество машин>");
-                return;
-            }
-            else
-            {
-                cars = int.Parse(args[0]);
-            }
             // ДАНО:
             // Город в виде графа... (список смежности)
             Dictionary<int, List<Edge>> adjacency_list;
@@ -41,7 +31,7 @@ namespace mtsp
 
 
             // инициализируем решатель
-            MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, storage_distance, cars);
+            MtspSolver solver = new MtspSolver(adjacency_matrix, shops, storage, storage_distance, number_of_cars);
 
             solver.Solve();
         }
@@ -86,12 +76,13 @@ namespace mtsp
 
                     // После этого идёт список дорог и их расстояния в формате:
                     // <пункт1> <пункт2> <расстояние>
+                    // указаны номера пунктов, они начинаются с 1
                     line = reader.ReadLine();
                     while (line != null)
                     {
                         bits = line.Split(' ');
-                        int first = int.Parse(bits[0]);
-                        int second = int.Parse(bits[1]);
+                        int first = int.Parse(bits[0]) - 1;
+                        int second = int.Parse(bits[1]) - 1;
                         int cost = int.Parse(bits[2]);
                         Edge edge_first_second = new Edge(second, cost);
                         Edge edge_second_first = new Edge(first, cost);
@@ -134,6 +125,7 @@ namespace mtsp
         public static void ConvertToCompleteGraph(Dictionary<int, List<Edge>> adjacency_list,
                 List<int> shops, int storage, out int[,] adjacency_matrix, out int[] storage_distance)
         {
+            Console.Write("Converting graph... ");
             adjacency_matrix = new int[shops.Count, shops.Count];
 
             for(int shop = 0; shop < shops.Count; ++shop)
@@ -161,6 +153,7 @@ namespace mtsp
             {
                 storage_distance[shop] = distance[shops[shop]];
             }
+            Console.WriteLine("done.");
         }
     }
 }
