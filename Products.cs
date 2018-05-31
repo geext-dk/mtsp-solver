@@ -16,11 +16,10 @@ namespace mtsp
             Dictionary<int, List<Edge>> adjacency_list;
             int number_of_cars;      // Количество задействованных машин
             int storage;             // склад
-            int number_of_shops;
             int[] shops;         // Список магазинов
 
             if (!ReadData("input.txt", out adjacency_list, out number_of_cars,
-                     out number_of_shops, out storage, out shops))
+                    out storage, out shops))
             {
                 return;
             }
@@ -43,7 +42,7 @@ namespace mtsp
         // Функция, читающая данные из переданного файла
         public static bool ReadData(string input_file,
                 out Dictionary<int, List<Edge>> adjacency_list, out int number_of_cars,
-                out int number_of_shops, out int storage, out int[] shops)
+                out int storage, out int[] shops)
         {
             try
             {
@@ -58,25 +57,25 @@ namespace mtsp
                 using (StreamReader reader = new StreamReader(input_file))
                 {
                     // Первая строка во входном файле:
-                    // <кол-во пунктов = n> <кол-во машин = m> <склад>
+                    // <кол-во машин> <склад>
                     string line = reader.ReadLine();
                     string[] bits = line.Split(' ');
-                    number_of_cars = int.Parse(bits[1]);
-                    number_of_shops = int.Parse(bits[2]);
-                    storage = int.Parse(bits[3]);
-                    shops = new int[number_of_shops];
+                    number_of_cars = int.Parse(bits[0]);
+                    Console.WriteLine("Number of cars: " + number_of_cars);
+                    storage = int.Parse(bits[1]);
 
                     // На следующей строке расположен список магазинов
                     line = reader.ReadLine();
                     bits = line.Split(' ');
-                    for (int i = 0; i < number_of_shops; ++i)
-                    {
-                        if (bits[i].Length == 0)
-                        {
+                    List<int> shops_list = new List<int>();
+                    foreach (String raw_shop in bits) {
+                        if (raw_shop.Length == 0) {
                             continue;
                         }
-                        shops[i] = int.Parse(bits[i]);
+                        shops_list.Add(int.Parse(raw_shop));
                     }
+                    shops = shops_list.ToArray();
+                    Console.WriteLine("Number of shops: " + shops.Length);
 
                     // После этого идёт список дорог и их расстояния в формате:
                     // <пункт1> <пункт2> <расстояние>
@@ -117,7 +116,6 @@ namespace mtsp
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error during reading input file: " + input_file);
                 number_of_cars = 0;
-                number_of_shops = 0;
                 storage = 0;
                 adjacency_list = null;
                 shops = null;

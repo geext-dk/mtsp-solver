@@ -6,10 +6,10 @@ namespace mtsp
     public class MtspSolver
     {
         // ========================
-        public static int MaximumSameResults = 1000;
-        public static int InitialNumber = 16;
-        public static int CrossoverNumber = InitialNumber;
-        public static int MutationNumber = InitialNumber;
+        public static int MaximumSameResults = 10000;
+        public static int InitialNumber = 1;
+        public static int MutationNumber = InitialNumber * 4;
+        public static int CrossoverNumber = InitialNumber * 2;
         public static int SelectionGroupSize =
             (InitialNumber + CrossoverNumber + MutationNumber) / InitialNumber;
         // ========================
@@ -46,9 +46,13 @@ namespace mtsp
             int last_best_result = 0;
             Solution best_solution;
             do {
+                //Console.WriteLine("Mutation");
                 Mutation();
+                //Console.WriteLine("Crossover");
                 Crossover();
+                //Console.WriteLine("Selection");
                 Selection(out best_solution, out best_result);
+                //Console.WriteLine("Done");
 
                 if (last_best_result != best_result) {
                     cycles += i;
@@ -92,7 +96,7 @@ namespace mtsp
 
         private void Crossover()
         {
-            if (number_of_shops < 2) {
+            if (number_of_shops < 2 || population.Count < 2) {
                 return;
             }
 
@@ -140,14 +144,18 @@ namespace mtsp
 
         private void Mutation()
         {
+            int more_than_one_car = 0;
+            if (number_of_cars >= 2) {
+                more_than_one_car = 1;
+            }
             for (int number = 0; number < MutationNumber; ++number) {
                 int chromosome = rand.Next(0, population.Count);
 
                 Solution new_solution = population[chromosome].Copy();
                 
-                int chance = rand.Next(0, 2);
+                int chance = more_than_one_car * rand.Next(0, 2);
                 
-                if (chance == 1) {
+                if (chance == 0) {
                     MutateSwap(new_solution);
                 } else {
                     MutateAdjust(new_solution);

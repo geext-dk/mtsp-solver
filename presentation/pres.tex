@@ -6,9 +6,12 @@
 \usepackage{mathtools}
 \usepackage{graphicx}
 \usepackage{listings}
+\usepackage{pdfpages}
+
 \setmainfont{Times New Roman}
 \setsansfont{Arial}
 \setmonofont{Courier New}
+
 \lstset{language=[Sharp]C,
         basicstyle=\ttfamily\scriptsize,
         breaklines=true}
@@ -19,6 +22,20 @@
 
 \begin{document}
 \frame{\titlepage}
+\begin{frame}
+    \begin{figure}
+        \centering
+        Первая презентация
+    \end{figure}
+\end{frame}
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=2-7]{1_pres.pdf}
+\begin{frame}
+    \begin{figure}
+        Вторая презентация
+    \end{figure}
+\end{frame}
+\includepdf[pages=2-12]{2_pres.pdf}
 \begin{frame}
     \frametitle{Постановка задачи}
     Дан город, на котором отмечены разные пункты, среди которых есть магазины и склад.
@@ -73,7 +90,8 @@
 \end{frame}
 \begin{frame}
     \frametitle{Генерация первичной популяции}
-    Первичная популяция генерируется случайным образом.
+    Первичная популяция состоит из одной особи и генерируется
+    случайным образом. 
     Генерация массива магазинов у особи проста: обходом ячеек подряд
     записываем них случайный еще не посещенный магазин.
     Генерация массива машин: генерируется количество посещяемых
@@ -86,9 +104,8 @@
     \frametitle{Мутация}
     Используется 2 вида мутации.\\*
     Первая мутация - в массиве магазинов у особи меняются местами два магазина.\\*
-    Вторая мутация - перегенерируется массив машин.
-    У каждой особи шансы мутации - 30\% мутации первого типа, 20\% мутации. второго типа и 10\%, что будут применены обе мутации. При мутации 
-    оригинал особи сохраняется.
+    Вторая мутация - у одной машины уменьшается длина пути на случайное число, у другой машины увеличивается на это же число.
+    На каждую особь может быть применена либо первая, либо вторая мутация. Исходная особь сохраняется.
 \end{frame}
 \begin{frame}
     \frametitle{Скрещивание}
@@ -125,23 +142,34 @@
     В классе \textbf{MtspSolver} определены константы: количество
     особей в первичной популяции, количество мутаций и количество
     скрещиваний. \\*
-    Также есть класс textbf{Solution}, который является классом особей.
+    Также есть класс \textbf{Solution}, который является классом особей.
     Он определяет полезные методы для копирования особей, получения 
     их массивов, итерирования и представления особи в виде строки.
 \end{frame}
+\begin{frame}
+    \frametitle{Формат входного файла}
+    Входной файл подаётся в следующем формате:\\
+    Первая строка: <количество машин> <склад>\\
+    Вторая строка: перечисление магазинов через пробел\\
+    На каждой следующей строке расположено 3 числа через пробел:
+    Первая вершина, вторая вершина и вес ребра между ними
+\end{frame}
+\begin{frame}
+    \frametitle{Время работы}
+    Алгоритм был протестирован на графе с около 80 тысячами рёбер и 200 магазинами.
+    Примерно за минуту достигается результат, который хуже оптимального на 20\%.
+    При продолжении работы алгоритм способен максимально приблизиться к оптимальному решению.
+\end{frame}
 \begin{frame}[fragile]
 \frametitle{Класс Products}
-\lstinputlisting{Products.cs}
+\lstinputlisting{Products.src}
 \end{frame}
 \begin{frame}[fragile]
 \frametitle{Класс MtspSolver}
-\lstinputlisting[firstline=1, lastline=14]{Solve.cs}
+\lstinputlisting[firstline=1, lastline=14]{Solve.src}
 \end{frame}
 \begin{frame}[fragile]
-\lstinputlisting[firstline=15, lastline=30]{Solve.cs}
-\end{frame}
-\begin{frame}[fragile]
-\lstinputlisting[firstline=31]{Solve.cs}
+\lstinputlisting[firstline=15]{Solve.src}
 \end{frame}
 \begin{frame}
 \frametitle{Участники}

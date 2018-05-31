@@ -1,0 +1,6 @@
+static void Main(string[] args);
+public static bool ReadData(string input_file,
+    out Dictionary<int, List<Edge>> adjacency_list,
+    out int number_of_cars, out int storage, out List<int> shops);
+public static void ConvertToCompleteGraph(Dictionary<int, List<Edge>> adjacency_list,
+    List<int> shops, int storage, out int[,] adjacency_matrix, out int[] storage_distance)
