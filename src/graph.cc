@@ -4,14 +4,14 @@
 
 #include "graph.h"
 namespace mtsp {
-    Graph::Graph(std::vector<std::vector<int>> &adjacency_matrix) : _adjacency_matrix(adjacency_matrix),
-                                                                    _number_of_shops(adjacency_matrix.size())
+    Graph::Graph(const std::vector<std::vector<int>> &adjacency_matrix)
+            : _adjacency_matrix(adjacency_matrix), _number_of_vertices(adjacency_matrix.size())
     {
     }
 
-    unsigned long Graph::getNumberOfShops() const
+    unsigned long Graph::getNumberOfVertices() const
     {
-        return _number_of_shops;
+        return _number_of_vertices;
     }
 
     int Graph::getWeight(int first_vertex, int second_vertex) const

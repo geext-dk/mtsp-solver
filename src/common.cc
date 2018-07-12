@@ -1,12 +1,23 @@
 #include "common.h"
 
-unsigned long mtsp::firstFreeRandom(std::vector<int> &assigned, unsigned long number_of_free)
+std::default_random_engine& mtsp::getRandomEngine() {
+    static std::random_device r;
+    static std::default_random_engine e;
+    try {
+        e = std::default_random_engine(r());
+    } catch(std::exception& ex) {
+        std::cerr << "Error creating a random engine. Falling back to a time-based seed" << std::endl;
+        e = std::default_random_engine(
+                static_cast<unsigned long>(std::chrono::system_clock::now().time_since_epoch().count()));
+    }
+    return e;
+}
+
+unsigned long mtsp::firstFreeRandom(const std::vector<int> &assigned, unsigned long number_of_free)
 {
-    std::random_device random_device;
-    std::default_random_engine random_engine(random_device());
-    std::uniform_int_distribution<unsigned long> uniform_dist(0, number_of_free);
-    // get random number
-    unsigned long random_position = uniform_dist(random_engine);
+    // get random number (the distribution generates a random number that can be equal to the right boundary)
+    std::uniform_int_distribution<unsigned long> uniform_dist(0, number_of_free - 1);
+    unsigned long random_position = uniform_dist(getRandomEngine());
 
     int k = -1;
     while (k != random_position) {
@@ -21,37 +32,38 @@ unsigned long mtsp::firstFreeRandom(std::vector<int> &assigned, unsigned long nu
 
 
 std::tuple<std::unordered_map<int, int>, std::unordered_map<int, int>>
-mtsp::dijkstra(std::unordered_map<int, std::vector<Edge>> &adjacancy_list, int from)
+mtsp::dijkstra(const std::unordered_map<int, std::vector<EndVertex>> &adjacency_list, int from)
 {
-    // maps are used because vertices numbers can be greater than their amount
+
+    // maps are used because the vertices numbers can be greater than their amount
     std::unordered_map<int, int> distance;
     std::unordered_map<int, int> previous;
 
-    auto cmp = [](Edge &left, Edge &right) {
-        return left.getCost() > right.getCost();
+    auto cmp = [](const Destination &first, const Destination &second) {
+        return first.distance < second.distance;
     };
     // priority queue
-    std::priority_queue<Edge, std::vector<Edge>, decltype(cmp)> queue(cmp);
+    std::priority_queue<Destination, std::vector<Destination>, decltype(cmp)> queue(cmp);
 
-    queue.push(Edge(from, 0));
+    queue.push(Destination(from, 0));
     distance[from] = 0;
     previous[from] = -1;
     while (!queue.empty()) {
-        Edge u = queue.top();
+        Destination u = queue.top();
         queue.pop();
-        if (distance.find(u.getDest()) != distance.end() && u.getCost() > distance[u.getDest()]) {
+        if (distance.find(u.destination) != distance.end() && u.distance > distance[u.destination]) {
             continue;
         }
 
-        for (Edge v : adjacancy_list[u.getDest()]) {
-            Edge next = Edge(v.getDest(), u.getCost() + v.getCost());
+        for (const EndVertex &v : adjacency_list.at(u.destination)) {
+            Destination next(v.vertex, u.distance + v.weight);
 
-            if (distance.find(next.getDest()) == distance.end() || next.getCost() < distance[next.getDest()]) {
+            if (distance.find(next.destination) == distance.end() || next.distance < distance[next.destination]) {
                 queue.push(next);
-                distance[next.getDest()] = next.getCost();
-                previous[next.getDest()] = u.getDest();
+                distance[next.destination] = next.distance;
+                previous[next.destination] = u.destination;
             }
         }
     }
-    return std::tie(distance, previous);
+    return std::make_tuple(std::move(distance), std::move(previous));
 }

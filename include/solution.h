@@ -14,22 +14,21 @@ namespace mtsp {
     class Solution {
 
     public:
-        Solution(std::vector<unsigned long> &shops_array, std::vector<unsigned long> &paths_lengths);
-        Solution(unsigned long number_of_shops, unsigned long number_of_cars);
-        const std::vector<unsigned long>& getShopsArray() const;
-        const std::vector<unsigned long>& getPathsLengths() const;
-        Solution&& copy() const;
+        Solution(const std::vector<unsigned long> &vertices, const std::vector<unsigned long> &chains_lengths);
+        Solution(unsigned long number_of_vertices, unsigned long number_of_chains);
+        const std::vector<unsigned long>& getVertices() const;
+        const std::vector<unsigned long>& getChainsLengths() const;
+        Solution clone() const;
 
     private:
-        std::vector<unsigned long> _shops_array;
-        std::vector<unsigned long> _paths_lengths;
-        const unsigned long _number_of_shops;
-        const unsigned long _number_of_cars;
+        std::vector<unsigned long> _vertices;
+        std::vector<unsigned long> _chains_lengths;
+        const unsigned long _number_of_vertices;
+        const unsigned long _number_of_chains;
 
-        void regeneratePathsLengths();
-        void regenerateShopsArray();
-
-
+        // functions to regenerate the corresponding arrays
+        void regenerateChainsLengths();
+        void regenerateVertices();
     };
 }
 
