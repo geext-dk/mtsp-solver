@@ -8,16 +8,16 @@ std::default_random_engine& mtsp::getRandomEngine() {
     } catch(std::exception& ex) {
         std::cerr << "Error creating a random engine. Falling back to a time-based seed" << std::endl;
         e = std::default_random_engine(
-                static_cast<unsigned long>(std::chrono::system_clock::now().time_since_epoch().count()));
+                static_cast<std::size_t>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
     return e;
 }
 
-unsigned long mtsp::firstFreeRandom(const std::vector<int> &assigned, unsigned long number_of_free)
+std::size_t mtsp::firstFreeRandom(const std::vector<unsigned> &assigned, std::size_t number_of_free)
 {
     // get random number (the distribution generates a random number that can be equal to the right boundary)
-    std::uniform_int_distribution<unsigned long> uniform_dist(0, number_of_free - 1);
-    unsigned long random_position = uniform_dist(getRandomEngine());
+    std::uniform_int_distribution<std::size_t> uniform_dist(0, number_of_free - 1);
+    std::size_t random_position = uniform_dist(getRandomEngine());
 
     int k = -1;
     while (k != random_position) {
@@ -31,13 +31,13 @@ unsigned long mtsp::firstFreeRandom(const std::vector<int> &assigned, unsigned l
 }
 
 
-std::tuple<std::unordered_map<int, int>, std::unordered_map<int, int>>
-mtsp::dijkstra(const std::unordered_map<int, std::vector<EndVertex>> &adjacency_list, int from)
+std::tuple<std::unordered_map<std::size_t, std::size_t>, std::unordered_map<std::size_t, std::size_t>>
+mtsp::dijkstra(const std::unordered_map<std::size_t, std::vector<EndVertex>> &adjacency_list, std::size_t from)
 {
 
     // maps are used because the vertices numbers can be greater than their amount
-    std::unordered_map<int, int> distance;
-    std::unordered_map<int, int> previous;
+    std::unordered_map<std::size_t, std::size_t> distance;
+    std::unordered_map<std::size_t, std::size_t> previous;
 
     auto cmp = [](const Destination &first, const Destination &second) {
         return first.distance < second.distance;
@@ -47,7 +47,8 @@ mtsp::dijkstra(const std::unordered_map<int, std::vector<EndVertex>> &adjacency_
 
     queue.push(Destination(from, 0));
     distance[from] = 0;
-    previous[from] = -1;
+    previous[from] = 0;  // TODO: define the value to distinguish a source from other vertices
+                         // (A source cannot have a previous vertex)
     while (!queue.empty()) {
         Destination u = queue.top();
         queue.pop();

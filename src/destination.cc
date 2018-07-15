@@ -4,7 +4,7 @@
 
 #include "destination.h"
 
-Destination::Destination(int dest, int dist) {
+Destination::Destination(std::size_t dest, unsigned long dist) {
     destination = dest;
     distance = dist;
 }

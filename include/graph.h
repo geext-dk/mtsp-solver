@@ -10,13 +10,13 @@ namespace mtsp {
     class Graph {
 
     public:
-        explicit Graph(const std::vector<std::vector<int>> &matrix);
+        explicit Graph(const std::vector<std::vector<unsigned long>> &matrix);
         unsigned long getNumberOfVertices() const;
-        int getWeight(int first_vertex, int second_vertex) const;
+        unsigned long getWeight(std::size_t first_vertex, std::size_t second_vertex) const;
 
     private:
-        const std::vector<std::vector<int>> _adjacency_matrix;
-        const unsigned long _number_of_vertices;
+        const std::vector<std::vector<std::size_t>> _adjacency_matrix;
+        const std::size_t _number_of_vertices;
     };
 }
 
