@@ -5,11 +5,11 @@
 #include "mtsp_solver.h"
 
 namespace mtsp {
-    MtspSolver::MtspSolver(const Graph &graph, const std::vector<unsigned long> &storage_distance,
-                                 unsigned long number_of_chains)
-        : _graph(graph), _storage_distance(storage_distance), _number_of_chains(number_of_chains),
-          _number_of_vertices(graph.getNumberOfVertices())
+    MtspSolver::MtspSolver(mtsp::IGraph &adjacency_matrix, std::size_t origin, std::size_t number_of_chains)
+            : _graph(adjacency_matrix.copy()), _origin(origin), _number_of_chains(number_of_chains),
+              _number_of_vertices(adjacency_matrix.getNumberOfVertices())
     {
+
     }
 
     void MtspSolver::solve() {

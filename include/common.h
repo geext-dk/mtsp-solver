@@ -10,6 +10,7 @@
 
 #include "end_vertex.h"
 #include "destination.h"
+#include "adjacency_list.h"
 
 namespace mtsp {
 
@@ -27,7 +28,7 @@ namespace mtsp {
 
     // dijkstra's algorithm implementation
     std::tuple<std::unordered_map<std::size_t, std::size_t>, std::unordered_map<std::size_t, std::size_t>>
-    dijkstra(const std::unordered_map<std::size_t, std::vector<EndVertex>> &adjacency_list, std::size_t from);
+    dijkstra(const AdjacencyList &adjacency_list, std::size_t from);
 }
 
 #endif  // MTSPSOLVER_COMMON_H

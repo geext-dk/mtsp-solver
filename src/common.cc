@@ -32,7 +32,7 @@ std::size_t mtsp::firstFreeRandom(const std::vector<unsigned> &assigned, std::si
 
 
 std::tuple<std::unordered_map<std::size_t, std::size_t>, std::unordered_map<std::size_t, std::size_t>>
-mtsp::dijkstra(const std::unordered_map<std::size_t, std::vector<EndVertex>> &adjacency_list, std::size_t from)
+mtsp::dijkstra(const AdjacencyList &adjacency_list, std::size_t from)
 {
 
     // maps are used because the vertices numbers can be greater than their amount
@@ -56,7 +56,7 @@ mtsp::dijkstra(const std::unordered_map<std::size_t, std::vector<EndVertex>> &ad
             continue;
         }
 
-        for (const EndVertex &v : adjacency_list.at(u.destination)) {
+        for (const EndVertex &v : adjacency_list.getEdges(u.destination)) {
             Destination next(v.vertex, u.distance + v.weight);
 
             if (distance.find(next.destination) == distance.end() || next.distance < distance[next.destination]) {

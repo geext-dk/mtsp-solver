@@ -9,16 +9,17 @@
 #include <vector>
 #include <memory>
 
-#include "graph.h"
+#include "igraph.h"
 #include "solution.h"
 
 namespace mtsp {
     class MtspSolver {
-
-
     public:
 
-        MtspSolver(const Graph &graph, const std::vector<std::size_t> &storage_distance, std::size_t number_of_chains);
+        // a constructor that takes a complete graph
+        MtspSolver(IGraph &adjacency_matrix, std::size_t origin, std::size_t number_of_chains);
+
+
         void solve();
 
     private:
@@ -34,8 +35,8 @@ namespace mtsp {
         void mutation();
         std::tuple<std::size_t, unsigned long> selection();
 
-        const Graph _graph;
-        const std::vector<unsigned long> _storage_distance;
+        const std::unique_ptr<const IGraph> _graph;
+        const std::size_t _origin;
         const std::size_t _number_of_chains;
         const std::size_t _number_of_vertices;
         std::vector<Solution> _population;
