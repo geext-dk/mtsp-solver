@@ -5,10 +5,30 @@
 #include "mtsp_solver.h"
 
 namespace mtsp {
-    MtspSolver::MtspSolver(mtsp::IGraph &adjacency_matrix, std::size_t origin, std::size_t number_of_chains)
-            : _graph(adjacency_matrix.copy()), _origin(origin), _number_of_chains(number_of_chains),
-              _number_of_vertices(adjacency_matrix.getNumberOfVertices())
-    {
+
+    void MtspSolver::importCompleteGraph(IGraph &graph, std::size_t origin, std::size_t number_of_chains) {
+        _ready = false;
+        _origin = origin;
+        _number_of_chains = number_of_chains;
+        _number_of_vertices =  graph.getNumberOfVertices();
+        _graph.setNumberOfVertices(_number_of_vertices);
+        std::vector<std::size_t> vertices = graph.getAllVertices();
+        // TODO:
+        for (std::size_t v1 : vertices) {
+            for (std::size_t v2 : vertices) {
+                if (v1 == v2) {
+                    _graph.setWeight(v1, v2, std::size_t
+                }
+            }
+        }
+    }
+
+    void MtspSolver::importNonCompleteGraph(IGraph &graph, std::vector<std::size_t> &vertices, std::size_t origin,
+                                            std::size_t number_of_chains) {
+        _ready = false;
+        _origin = origin;
+        _number_of_chains = number_of_chains;
+        _number_of_vertices = vertices.size();
 
     }
 
@@ -50,12 +70,12 @@ namespace mtsp {
         const std::vector<std::size_t> &vertices = solution.getVertices();
         for (std::size_t chain_length : solution.getChainsLengths()) {
             std::size_t previous_vertex = vertices[chain_start];
-            unsigned long distance = _storage_distance[previous_vertex];
+            unsigned long distance = _origin_distance[previous_vertex];
             for (int position = chain_start + 1; position != chain_start + chain_length; ++position) {
                 distance += _graph.getWeight(previous_vertex, vertices[position]);
                 previous_vertex = vertices[position];
             }
-            distance += _storage_distance[previous_vertex];
+            distance += _origin_distance[previous_vertex];
             if (distance > maximum_distance) {
                 maximum_distance = distance;
             }
@@ -94,7 +114,7 @@ namespace mtsp {
             more_than_one_chain = 1;
         }
 
-        for (unsigned number = 0; number > MutationNumer; ++number) {
+        for (unsigned number = 0; number > MutationNumber; ++number) {
             auto chromosome = getRandomInteger<std::size_t>(0, _population.size());
             Solution new_solution(_population[chromosome].clone());
 

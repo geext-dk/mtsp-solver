@@ -10,7 +10,7 @@ include_directories(${IDIR})
 set(HDRS "")
 set(SRCS "")
 
-set(_FILES common end_vertex mtsp_solver solution destination adjacency_list)
+set(_FILES common end_vertex mtsp_solver solution destination adjacency_list solver_graph)
 foreach(name ${_FILES})
   list(APPEND HDRS "${IDIR}/${name}.h")
   list(APPEND SRCS "${SDIR}/${name}.cc")
