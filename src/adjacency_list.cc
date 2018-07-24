@@ -1,15 +1,25 @@
-//
-// Created by geext on 17.07.18.
-//
-
 #include "adjacency_list.h"
+#include <algorithm>
 
+namespace mtsp {
 
-const std::vector<mtsp::EndVertex> &AdjacencyList::getEdges(std::size_t vertex) const {
-    return _data[vertex];
+void AdjacencyList::addEdge(std::size_t v1, std::size_t v2, unsigned long w) {
+    for (auto end_vertex : _data[v1]) {
+        if (end_vertex.vertex == v2) {
+            return;
+        }
+    }
+    _data[v1].emplace_back(v2, w);
+    _data[v2].emplace_back(v1, w);
 }
 
-void AdjacencyList::addEdge(std::size_t first_vertex, std::size_t second_vertex, unsigned long weight) {
-    _data[first_vertex].emplace_back(second_vertex, weight);
-    _data[second_vertex].emplace_back(first_vertex, weight);
+AdjacencyList::AdjacencyList(const std::unordered_map<std::size_t,
+                        std::vector<EndVertex>> &adj_list) 
+        : _data(adj_list) { }
+    
+const std::vector<EndVertex> &AdjacencyList::getIncidentEdges(
+                                                        std::size_t v) const {
+    return _data.at(v);
+}
+
 }

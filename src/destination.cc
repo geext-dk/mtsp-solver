@@ -1,10 +1,10 @@
-//
-// Created by geext on 7/12/18.
-//
-
 #include "destination.h"
+
+namespace mtsp {
 
 Destination::Destination(std::size_t dest, unsigned long dist) {
     destination = dest;
     distance = dist;
+}
+
 }

@@ -1,23 +1,24 @@
-//
-// Created by geext on 17.07.18.
-//
-
-#ifndef MTSPSOLVERMAIN_ADJACENCYLIST_H
-#define MTSPSOLVERMAIN_ADJACENCYLIST_H
-
+#ifndef MTSPSOLVER_ADJACENCY_LIST_H
+#define MTSPSOLVER_ADJACENCY_LIST_H
+#include <cstddef>
 #include <vector>
 #include <unordered_map>
 
 #include "end_vertex.h"
 
+namespace mtsp {
+
 class AdjacencyList {
 public:
-    const std::vector<mtsp::EndVertex> &getEdges(std::size_t vertex) const;
-    void addEdge(std::size_t first_vertex, std::size_t second_vertex, unsigned long weight);
+    AdjacencyList() = default;
+    explicit AdjacencyList(const std::unordered_map<std::size_t,
+                            std::vector<EndVertex>> &adj_list);
+    const std::vector<EndVertex> &getIncidentEdges(std::size_t v) const;
+    void addEdge(std::size_t v1, std::size_t v2, unsigned long w);
 
 private:
-    std::unordered_map<std::size_t, std::vector<mtsp::EndVertex>> _data;
+    std::unordered_map<std::size_t, std::vector<EndVertex>> _data;
 };
 
-
-#endif //MTSPSOLVERMAIN_ADJACENCYLIST_H
+}
+#endif  // MTSPSOLVER_ADJACENCY_LIST_H
