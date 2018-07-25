@@ -4,9 +4,10 @@
 #include "util.h"
 #include "adjacency_list.h"
 
+using namespace mtsp;
+
 
 TEST(TestUtil, Dijkstra) {
-    using namespace mtsp;
     std::cout << std::endl;
     AdjacencyList list({
             {0, {EndVertex(1, 5), EndVertex(2, 7)}},
@@ -31,7 +32,6 @@ TEST(TestUtil, Dijkstra) {
 }
 
 TEST(TestUtil, FirstFreeRandom) {
-    using namespace mtsp;
     // 20 items, 10 zeroes
     unsigned long number_of_free = 10;
     std::vector<unsigned> is_assigned = { 1, 1, 0, 0, 1, 0, 0, 1, 0, 1,
@@ -46,5 +46,21 @@ TEST(TestUtil, FirstFreeRandom) {
     }
 }
 
-TEST(TestUtil)
+TEST(TestUtil, GetRandomInteger) {
+    std::size_t begin = 1;
+    std::size_t end = 100;
+    std::size_t min = end;
+    std::size_t max = begin;
+    for (unsigned i = 0; i < 10000; ++i) {
+        std::size_t random_int = getRandomInteger<std::size_t>(begin, end);
+        if (random_int > max) {
+            max = random_int;
+        }
+        if (random_int < min) {
+            min = random_int;
+        }
+    }
 
+    ASSERT_EQ(begin, min);
+    ASSERT_EQ(end - 1, max);
+}

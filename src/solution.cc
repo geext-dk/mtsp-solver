@@ -1,5 +1,6 @@
 #include "solution.h"
 
+#include <iostream>
 #include "util.h"
 
 namespace mtsp {
@@ -8,17 +9,17 @@ Solution::Solution() : _number_of_vertices(0), _number_of_chains(0) { }
 
 Solution::Solution(const std::vector<std::size_t> &vertices,
                    const std::vector<std::size_t> &chains_lengths)
-        : _number_of_chains(chains_lengths.size()),
+        : _vertices(vertices),
+          _chains_lengths(chains_lengths),
           _number_of_vertices(vertices.size()),
-          _vertices(vertices),
-          _chains_lengths(chains_lengths) { }
+          _number_of_chains(chains_lengths.size()) { }
 
 Solution::Solution(std::vector<std::size_t> &&vertices,
                    const std::vector<std::size_t> &chains_lengths)
-        : _number_of_chains(chains_lengths.size()),
+        : _vertices(std::move(vertices)),
+          _chains_lengths(chains_lengths),
           _number_of_vertices(vertices.size()),
-          _vertices(std::move(vertices)),
-          _chains_lengths(chains_lengths) { }
+          _number_of_chains(chains_lengths.size()) { }
 
 Solution::Solution(std::size_t number_of_vertices,
                    std::size_t number_of_chains)
@@ -115,7 +116,7 @@ void Solution::regenerateChainsLengths() {
 void Solution::regenerateVertices() {
     _vertices.resize(_number_of_vertices);
     std::vector<unsigned> assigned(_number_of_vertices, 0);
-    for (int i = 0; i < _number_of_vertices; ++i) {
+    for (std::size_t i = 0; i < _number_of_vertices; ++i) {
         std::size_t random_vertex = firstFreeRandom(assigned,
                                                     _number_of_vertices - i);
         assigned.at(random_vertex) = 1;
@@ -134,8 +135,10 @@ void Solution::mutateSwap() {
 }
 
 void Solution::mutateAdjust() {
-    std::size_t first_chain = getRandomInteger<std::size_t>(0, _number_of_chains);
-    std::size_t second_chain = getRandomInteger<std::size_t>(0, _number_of_chains - 1);
+    std::size_t first_chain = getRandomInteger<std::size_t>(0,
+                                                        _number_of_chains);
+    std::size_t second_chain = getRandomInteger<std::size_t>(0,
+                                                        _number_of_chains - 1);
     if (second_chain >= first_chain) {
         ++second_chain;
     }
@@ -145,7 +148,7 @@ void Solution::mutateAdjust() {
     }
 
     std::size_t adjustment = getRandomInteger<std::size_t>(1,
-                                        _chains_lengths.at(first_chain) - 2);
+                                        _chains_lengths.at(first_chain) - 1);
 
     _chains_lengths.at(first_chain) -= adjustment;
     _chains_lengths.at(second_chain) += adjustment;

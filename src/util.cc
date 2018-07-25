@@ -1,4 +1,4 @@
-#include "common.h"
+#include "util.h"
 
 #include <chrono>
 #include <exception>
@@ -34,8 +34,8 @@ std::default_random_engine& getRandomEngine() {
 
 std::size_t firstFreeRandom(const std::vector<unsigned> &is_assigned,
                             std::size_t number_of_free) {
-    std::size_t random_position = getRandomInteger<std::size_t>(0, number_of_free);
-
+    std::size_t random_position = getRandomInteger<std::size_t>(0,
+                                                                number_of_free);
     std::size_t k = 0;
     // dunno how to merge the zero case in the loop
     if (is_assigned.at(0) == 0) {

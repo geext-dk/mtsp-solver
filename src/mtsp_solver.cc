@@ -52,7 +52,7 @@ void MtspSolver::solve() {
         std::tie(best_solution_index, best_result) = selection();
 
         if (last_best_result != best_result) {
-            cycles += 1;
+            cycles += i;
             i = 0;
             last_best_result = best_result;
             std::cout << best_result << '\n';
@@ -129,7 +129,7 @@ void MtspSolver::mutation() {
         more_than_one_chain = 1;
     }
 
-    for (unsigned number = 0; number > MutationNumber; ++number) {
+    for (unsigned number = 0; number < MutationNumber; ++number) {
         auto chromosome = getRandomInteger<std::size_t>(0,
                                           _population.size());
         Solution new_solution(_population.at(chromosome).clone());
@@ -149,10 +149,9 @@ std::tuple<std::size_t, unsigned long> MtspSolver::selection() {
     std::vector<std::vector<Solution>> groups(InitialNumber);
     std::vector<unsigned> is_assigned(_population.size(), 0);
     for (std::size_t i = 0; i < _population.size(); ++i) {
-        auto position = firstFreeRandom(is_assigned,
-                                        _population.size() - i);
-        groups.at(i / SelectionGroupSize).push_back(
-                std::move(_population.at(position)));
+        std::size_t position = firstFreeRandom(is_assigned,
+                                              _population.size() - i);
+        groups.at(i / SelectionGroupSize).push_back(_population.at(position));
         is_assigned.at(position) = 1;
     }
 
@@ -162,14 +161,14 @@ std::tuple<std::size_t, unsigned long> MtspSolver::selection() {
     for (std::vector<Solution> &group : groups) {
         std::size_t minimum_index = 0;
         unsigned long minimum_function_result = objectiveFunction(group.at(0));
-        for (unsigned i = 0; i < group.size(); ++i) {
+        for (unsigned i = 1; i < group.size(); ++i) {
             unsigned long function_result = objectiveFunction(group.at(i));
             if (minimum_function_result > function_result) {
                 minimum_function_result = function_result;
                 minimum_index = i;
             }
         }
-        new_population.push_back(std::move(group.at(minimum_index)));
+        new_population.push_back(group.at(minimum_index));
         function_results.push_back(minimum_function_result);
     }
 
