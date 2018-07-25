@@ -1,14 +1,5 @@
 #include "util.h"
 
-#include <chrono>
-#include <exception>
-#include <iostream>
-#include <queue>
-
-#include "end_vertex.h"
-#include "destination.h"
-
-
 namespace mtsp {
 
 static bool is_random_assigned = false;
@@ -64,37 +55,27 @@ dijkstra(const AdjacencyList &adjacency_list, std::size_t from) {
     std::unordered_map<std::size_t, unsigned long> distance;
     std::unordered_map<std::size_t, std::size_t> previous;
 
-    auto cmp = [](const Destination &d1, const Destination &d2) {
-        return d1.distance > d2.distance;
-    };
-
-    std::priority_queue<Destination, std::vector<Destination>, decltype(cmp)>
-        queue(cmp);
-
-    queue.emplace(from, 0);
+    PriorityQueue pq;
+    for (auto &pair : adjacency_list) {
+        previous[pair.first] = 0;
+        distance[pair.first] = std::numeric_limits<std::size_t>::max();
+        pq.push(pair.first, std::numeric_limits<std::size_t>::max());
+    }
+    pq.decreasePriority(from, 0);
     distance[from] = 0;
-    previous[from] = from;
-    while (!queue.empty()) {
-        Destination u(queue.top());
-        queue.pop();
 
-        if (distance.find(u.destination) != distance.end()
-                && u.distance > distance.at(u.destination)) {
-            continue;
-        }
-
-        for (const EndVertex &v : adjacency_list
-                                            .getIncidentEdges(u.destination)) {
-            Destination next(v.vertex, u.distance + v.weight);
-
-            if (distance.find(next.destination) == distance.end()
-                    || next.distance < distance.at(next.destination)) {
-                queue.push(next);
-                distance[next.destination] = next.distance;
-                previous[next.destination] = u.destination;
+    while (pq.size() != 0) {
+        std::size_t u = pq.extractMin();
+        for (const EndVertex &v : adjacency_list.getIncidentEdges(u)) {
+            unsigned long alt = distance[u] + v.weight;
+            if (alt < distance[v.vertex]) {
+                distance[v.vertex] = alt;
+                pq.decreasePriority(v.vertex, alt);
+                previous[v.vertex] = u;
             }
         }
     }
+
     return std::make_tuple(std::move(distance), std::move(previous));
 }
 

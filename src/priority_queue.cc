@@ -37,6 +37,10 @@ void PriorityQueue::decreasePriority(std::size_t value,
     }
 }
 
+std::size_t PriorityQueue::size() const {
+    return _data.size();
+}
+
 void PriorityQueue::restoreDown(std::size_t parent) {
     std::size_t minimum_index = parent;
     bool swapped = true;

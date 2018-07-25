@@ -62,15 +62,13 @@ readInput(const std::string& file_path)
 }
 
 TEST (TestMtspSolver, Constructor) {
+    AdjacencyList list;
+    std::vector<std::size_t> vertices;
+    std::size_t number_of_chains, origin_vertex;
+    std::tie(number_of_chains, origin_vertex, vertices, list)
+        = readInput("input.txt");
     MtspSolver solver;
-    AdjacencyList list({
-        {1, {EndVertex(2, 5), EndVertex(3, 7)}},
-        {2, {EndVertex(1, 5), EndVertex(5, 9)}},
-        {3, {EndVertex(1, 7), EndVertex(5, 1)}},
-        {5, {EndVertex(2, 9), EndVertex(3, 1)}}
-    });
-    std::vector<std::size_t> vertices {1, 2, 3, 5};
-    solver.importAdjacencyList(list, vertices, 1, 1);
+    solver.importAdjacencyList(list, vertices, origin_vertex, number_of_chains);
 }
 
 TEST (TestMtspSolver, SolveFromInputFile) {

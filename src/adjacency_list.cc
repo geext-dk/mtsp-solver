@@ -1,5 +1,4 @@
 #include "adjacency_list.h"
-#include <algorithm>
 
 namespace mtsp {
 
@@ -20,6 +19,14 @@ AdjacencyList::AdjacencyList(const std::unordered_map<std::size_t,
 const std::vector<EndVertex> &AdjacencyList::getIncidentEdges(
                                                         std::size_t v) const {
     return _data.at(v);
+}
+
+AdjacencyList::iterator AdjacencyList::begin() const {
+    return _data.cbegin();
+}
+
+AdjacencyList::iterator AdjacencyList::end() const {
+    return _data.cend();
 }
 
 }

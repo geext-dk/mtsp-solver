@@ -10,6 +10,7 @@ public:
     void push(std::size_t value, unsigned long priority);
     std::size_t extractMin();
     void decreasePriority(std::size_t value, unsigned long new_priority);
+    std::size_t size() const;
 
 private:
     std::vector<std::pair<std::size_t, unsigned long>> _data;

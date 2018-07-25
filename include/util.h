@@ -1,12 +1,20 @@
 #ifndef MTSPSOLVER_COMMON_H
 #define MTSPSOLVER_COMMON_H
+#include <chrono>
 #include <cstddef>
+#include <exception>
+#include <iostream>
+#include <queue>
 #include <random>
-#include <unordered_map>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
+#include <limits>
 
 #include "adjacency_list.h"
+#include "destination.h"
+#include "end_vertex.h"
+#include "priority_queue.h"
 
 namespace mtsp {
 
